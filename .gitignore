@@ -1,0 +1,81 @@
+# Unreal Engine specific
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+Build/
+*.VC.db
+*.opensdf
+*.opendb
+*.sdf
+*.sln
+*.suo
+*.xcodeproj
+*.xcworkspace
+
+# Visual Studio specific
+.vs/
+*.user
+*.aps
+*.pch
+*.vspscc
+*_i.c
+*_p.c
+*.ncb
+*.tlb
+*.tlh
+*.bak
+*.cache
+*.ilk
+*.log
+*.lib
+*.sbr
+*.pdb
+*.exp
+*.idb
+
+# Rider specific
+.idea/
+*.sln.iml
+
+# OS specific
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Content that shouldn't be committed (large files)
+Content/StarterContent/
+Content/Collections/
+Content/Developers/
+
+# Build artifacts
+*.obj
+*.o
+*.a
+*.dylib
+*.so
+*.dll
+*.exe
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# Plugin specific
+Plugins/*/Binaries/
+Plugins/*/Intermediate/
+
+# Packaging
+Dist/
+Package/
+
+# Crash reports
+*.crash
+*.dmp
+CrashReportClient/
+
+# Local configuration
+Config/DefaultGameUserSettings.ini
