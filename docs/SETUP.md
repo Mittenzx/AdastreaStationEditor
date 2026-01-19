@@ -126,6 +126,15 @@ Best for testing integration with actual Adastrea modules.
 ### 1. Check Plugin Structure
 
 Verify the repository was cloned correctly:
+
+**Windows (Command Prompt/PowerShell):**
+```cmd
+cd \path\to\ModularStationDesigner
+dir
+# Should see: Source/, Content/, ModularStationDesigner.uplugin, README.md, etc.
+```
+
+**Mac/Linux or Git Bash on Windows:**
 ```bash
 cd /path/to/ModularStationDesigner
 ls -la
@@ -135,6 +144,20 @@ ls -la
 ### 2. Check Plugin Descriptor
 
 Verify the `.uplugin` file is valid:
+
+**Windows (Command Prompt):**
+```cmd
+type ModularStationDesigner.uplugin
+# Should be valid JSON with "Modules" array
+```
+
+**Windows (PowerShell):**
+```powershell
+Get-Content ModularStationDesigner.uplugin
+# Should be valid JSON with "Modules" array
+```
+
+**Mac/Linux or Git Bash on Windows:**
 ```bash
 cat ModularStationDesigner.uplugin
 # Should be valid JSON with "Modules" array
@@ -143,6 +166,14 @@ cat ModularStationDesigner.uplugin
 ### 3. Check Build Files
 
 Ensure build configuration files exist:
+
+**Windows:**
+```cmd
+dir Source\ModularStationDesigner\ModularStationDesigner.Build.cs
+dir Source\ModularStationDesignerEditor\ModularStationDesignerEditor.Build.cs
+```
+
+**Mac/Linux or Git Bash on Windows:**
 ```bash
 ls Source/ModularStationDesigner/ModularStationDesigner.Build.cs
 ls Source/ModularStationDesignerEditor/ModularStationDesignerEditor.Build.cs
