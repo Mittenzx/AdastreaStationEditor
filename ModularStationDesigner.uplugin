@@ -3,7 +3,7 @@
   "Version": 1,
   "VersionName": "1.0.0",
   "FriendlyName": "Modular Station Designer",
-  "Description": "Visual station builder plugin for Adastrea - drag and drop modules with connection points to create space stations",
+  "Description": "Visual station builder plugin for Adastrea - drag and drop modules with connection points to create space stations. Fully integrated with Adastrea's ASpaceStationModule system.",
   "Category": "Level Design",
   "CreatedBy": "Adastrea Development Team",
   "CreatedByURL": "https://github.com/Mittenzx/Adastrea",

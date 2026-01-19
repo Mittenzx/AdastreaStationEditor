@@ -31,7 +31,16 @@ public class ModularStationDesignerEditor : ModuleRules
 			"ToolMenus",
 			"WorkspaceMenuStructure",
 			"Json",
-			"JsonUtilities"
+			"JsonUtilities",
+			"Kismet",
+			"KismetCompiler",
+			"BlueprintGraph"
 		});
+
+		// Optional dependency on Adastrea module for full integration
+		// If Adastrea is present, we can discover ASpaceStationModule classes
+		// and export to ASpaceStation Blueprints properly
+		// If not, the plugin uses fallback behavior
+		PrivateDependencyModuleNames.Add("Adastrea");
 	}
 }
