@@ -9,6 +9,10 @@
 #include "JsonUtilities.h"
 #include "Misc/FileHelper.h"
 
+#if ADASTREA_INTEGRATION_ENABLED
+#include "Stations/SpaceStation.h"
+#endif
+
 bool FStationExporter::ExportToBlueprintAsset(
 	const FStationDesign& Design,
 	const FString& TargetPackagePath,
@@ -78,9 +82,21 @@ UBlueprint* FStationExporter::CreateBlueprintAsset(const FString& PackagePath, c
 		return nullptr;
 	}
 
+	// Determine parent class for the Blueprint
+	UClass* ParentClass = AActor::StaticClass();
+	
+#if ADASTREA_INTEGRATION_ENABLED
+	// When Adastrea is available, create Blueprint from ASpaceStation
+	ParentClass = ASpaceStation::StaticClass();
+	UE_LOG(LogTemp, Log, TEXT("Creating station Blueprint from ASpaceStation class"));
+#else
+	// Fallback: Create from AActor
+	UE_LOG(LogTemp, Warning, TEXT("Adastrea not available - creating station Blueprint from AActor (limited functionality)"));
+#endif
+
 	// Create Blueprint
 	UBlueprint* NewBlueprint = FKismetEditorUtilities::CreateBlueprint(
-		AActor::StaticClass(),
+		ParentClass,
 		Package,
 		*AssetName,
 		BPTYPE_Normal,
