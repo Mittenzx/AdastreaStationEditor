@@ -30,7 +30,25 @@ This plugin provides a streamlined workflow for designing space stations in the 
 
 - **Unreal Engine**: 5.6 (primary), 5.4+ (minimum)
 - **Platform**: Windows (primary), Mac/Linux (optional)
-- **Dependencies**: Adastrea project modules
+- **Dependencies**: Adastrea project modules (optional - enables full integration)
+
+## Adastrea Integration
+
+This plugin supports **optional integration** with the Adastrea game project:
+
+**With Adastrea (Full Integration Mode):**
+- ✅ Discovers modules by checking `ASpaceStationModule` inheritance
+- ✅ Reads actual module properties (type, power, group) from Blueprints
+- ✅ Exports to `ASpaceStation` Blueprints ready for Adastrea
+- ✅ Uses Adastrea's module group system
+- ✅ Validates stations against Adastrea requirements
+
+**Standalone Mode (Fallback):**
+- ⚠️ Name-based module discovery
+- ⚠️ Inferred module properties
+- ⚠️ Exports to generic `AActor` Blueprints
+
+See [Adastrea Compatibility Guide](docs/ADASTREA_COMPATIBILITY.md) for detailed integration information.
 
 ## Quick Start
 
@@ -59,6 +77,7 @@ See [ROADMAP.md](ROADMAP.md) for detailed development timeline and milestones.
 
 - [Roadmap](ROADMAP.md) - Development phases and timeline
 - [Architecture](docs/ARCHITECTURE.md) - Technical design and structure
+- [Adastrea Compatibility](docs/ADASTREA_COMPATIBILITY.md) - Integration with Adastrea game modules
 - [Contributing](CONTRIBUTING.md) - How to contribute to the project
 - [Station Builder Specification](STATION_BUILDER_PLUGIN_SPECIFICATION.md) - Complete feature specification
 

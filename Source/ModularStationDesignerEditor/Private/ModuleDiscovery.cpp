@@ -5,6 +5,10 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "UObject/UObjectIterator.h"
 
+#if ADASTREA_INTEGRATION_ENABLED
+#include "Stations/SpaceStationModule.h"
+#endif
+
 TArray<FModuleInfo> FModuleDiscovery::DiscoverModules()
 {
 	TArray<FModuleInfo> Modules;
@@ -19,9 +23,27 @@ TArray<FModuleInfo> FModuleDiscovery::DiscoverModules()
 	AssetRegistry.GetAssetsByClass(UBlueprint::StaticClass()->GetClassPathName(), BlueprintAssets);
 
 	// Filter for station module Blueprints
+	// Note: This loads each Blueprint into memory to check inheritance.
+	// For large projects with many Blueprints, consider using AssetRegistry tags
+	// or implementing pagination/caching to improve performance.
 	for (const FAssetData& AssetData : BlueprintAssets)
 	{
-		// Check if this looks like a station module
+		UBlueprint* Blueprint = Cast<UBlueprint>(AssetData.GetAsset());
+		if (!Blueprint || !Blueprint->GeneratedClass)
+		{
+			continue;
+		}
+
+#if ADASTREA_INTEGRATION_ENABLED
+		// Check if Blueprint inherits from ASpaceStationModule
+		if (Blueprint->GeneratedClass->IsChildOf(ASpaceStationModule::StaticClass()))
+		{
+			FModuleInfo Info = ExtractModuleInfo(Blueprint);
+			Info.BlueprintPath = AssetData.GetObjectPathString();
+			Modules.Add(Info);
+		}
+#else
+		// Fallback: Check if this looks like a station module (name-based)
 		FString AssetName = AssetData.AssetName.ToString();
 		if (AssetName.Contains(TEXT("Module")) || 
 			AssetName.Contains(TEXT("Station")) ||
@@ -29,14 +51,11 @@ TArray<FModuleInfo> FModuleDiscovery::DiscoverModules()
 			AssetName.Contains(TEXT("Reactor")) ||
 			AssetName.Contains(TEXT("Cargo")))
 		{
-			UBlueprint* Blueprint = Cast<UBlueprint>(AssetData.GetAsset());
-			if (Blueprint)
-			{
-				FModuleInfo Info = ExtractModuleInfo(Blueprint);
-				Info.BlueprintPath = AssetData.GetObjectPathString();
-				Modules.Add(Info);
-			}
+			FModuleInfo Info = ExtractModuleInfo(Blueprint);
+			Info.BlueprintPath = AssetData.GetObjectPathString();
+			Modules.Add(Info);
 		}
+#endif
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("Discovered %d station modules"), Modules.Num());
@@ -75,6 +94,33 @@ FModuleInfo FModuleDiscovery::ExtractModuleInfo(UBlueprint* Blueprint)
 
 	Info.Name = Blueprint->GetName();
 	Info.ModuleType = Info.Name;
+
+#if ADASTREA_INTEGRATION_ENABLED
+	// Read actual module properties from Blueprint's Class Default Object (CDO)
+	if (Blueprint->GeneratedClass && Blueprint->GeneratedClass->IsChildOf(ASpaceStationModule::StaticClass()))
+	{
+		ASpaceStationModule* ModuleCDO = Cast<ASpaceStationModule>(Blueprint->GeneratedClass->GetDefaultObject());
+		if (ModuleCDO)
+		{
+			// Defensive validation: ensure methods return valid data
+			// Note: If Adastrea API changes, these calls may need updates
+			FString ModuleTypeName = ModuleCDO->GetModuleType();
+			if (!ModuleTypeName.IsEmpty())
+			{
+				Info.ModuleType = ModuleTypeName;
+			}
+			
+			Info.PowerConsumption = ModuleCDO->GetModulePower();
+			Info.ModuleGroup = ModuleCDO->GetModuleGroup();
+			
+			UE_LOG(LogTemp, Verbose, TEXT("Read module info from CDO: %s (Power: %.1f, Group: %d)"),
+				*Info.ModuleType, Info.PowerConsumption, (int32)Info.ModuleGroup);
+			return Info;
+		}
+	}
+#endif
+
+	// Fallback: Infer module properties from name
 	Info.ModuleGroup = DetermineModuleGroup(Info.Name);
 	
 	// Default power values based on module type

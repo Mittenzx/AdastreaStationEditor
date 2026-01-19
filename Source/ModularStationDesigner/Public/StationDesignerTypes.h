@@ -3,6 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+// Include Adastrea types if available
+#if __has_include("Stations/StationModuleTypes.h")
+#include "Stations/StationModuleTypes.h"
+#define ADASTREA_INTEGRATION_ENABLED 1
+#endif
+
 #include "StationDesignerTypes.generated.h"
 
 /**
@@ -32,7 +39,11 @@ enum class EConnectionSize : uint8
 
 /**
  * Station module group classification
+ * 
+ * NOTE: When building with Adastrea project, use EStationModuleGroup from Adastrea
+ * This local definition is for standalone plugin development only
  */
+#ifndef ADASTREA_INTEGRATION_ENABLED
 UENUM(BlueprintType)
 enum class EStationModuleGroup : uint8
 {
@@ -47,6 +58,7 @@ enum class EStationModuleGroup : uint8
 	Connection   UMETA(DisplayName="Connection"),
 	Other        UMETA(DisplayName="Other")
 };
+#endif // !ADASTREA_INTEGRATION_ENABLED
 
 /**
  * Data structure representing a placed module in the station design
