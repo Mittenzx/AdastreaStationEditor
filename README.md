@@ -4,21 +4,16 @@ A visual station builder plugin for Unreal Engine that enables drag-and-drop mod
 
 ## Overview
 
-This plugin provides a streamlined workflow for designing space stations in the Adastrea project. Instead of manually placing and positioning modules in the Unreal Editor, designers can use an intuitive visual tool to:
+This plugin provides a streamlined workflow for designing space stations in the Adastrea project. The goal is to enable designers to visually construct modular space stations instead of manually placing and positioning modules in the Unreal Editor.
 
-- **Drag and drop** station modules from a palette
-- **Connect modules** automatically with intelligent snapping
-- **Validate designs** to ensure all requirements are met
-- **Export directly** to Adastrea-compatible Blueprint actors
+### Planned Features
 
-### Key Features
-
-- 🎯 **Intuitive Interface**: Visual 3D workspace with drag-and-drop module placement
-- 🔌 **Smart Connections**: Automatic snapping and validation of module connections
-- ✅ **Built-in Validation**: Check for required modules, power balance, and connectivity
-- 📦 **Direct Export**: Generate Blueprint actors ready for use in Adastrea
-- 💾 **Save/Load**: Preserve designs for later editing
-- 🚀 **Fast Workflow**: Create functional stations 5-10x faster than manual placement
+- 🎯 **Intuitive Interface**: Visual 3D workspace with drag-and-drop module placement (Planned)
+- 🔌 **Smart Connections**: Automatic snapping and validation of module connections (In Development)
+- ✅ **Built-in Validation**: Check for required modules, power balance, and connectivity (Planned)
+- 📦 **Direct Export**: Generate Blueprint actors ready for use in Adastrea (Planned)
+- 💾 **Save/Load**: Preserve designs for later editing (Planned)
+- 🚀 **Fast Workflow**: Target 5-10x faster than manual placement (Goal)
 
 ## Target Users
 
@@ -28,52 +23,155 @@ This plugin provides a streamlined workflow for designing space stations in the 
 
 ## System Requirements
 
-- **Unreal Engine**: 5.6 (primary), 5.4+ (minimum)
-- **Platform**: Windows (primary), Mac/Linux (optional)
+- **Unreal Engine**: 5.4+ (5.6 recommended)
+- **Platform**: Windows, Mac, or Linux
 - **Dependencies**: Adastrea project modules
+- **Build Tools**: Visual Studio 2022 (Windows) or Xcode 14+ (Mac)
 
-## Quick Start
+## Installation
 
-> **Note**: This plugin is currently in development. The following instructions will be available once the plugin reaches MVP stage.
+### For Unreal Engine (UE)
 
-1. Clone this repository into your Unreal Engine plugins directory
-2. Open your Adastrea project
-3. Enable the "Modular Station Designer" plugin
-4. Access the tool from Tools menu → Station Builder
+#### Option 1: Plugin Directory Installation (Recommended for Development)
+
+1. **Clone the repository:**
+   ```bash
+   cd /path/to/your/UnrealProject/Plugins
+   git clone https://github.com/Mittenzx/AdastreaStationEditor.git ModularStationDesigner
+   ```
+
+2. **Generate project files:**
+   - Right-click on your `.uproject` file
+   - Select "Generate Visual Studio project files" (Windows) or "Generate Xcode project" (Mac)
+
+3. **Build the plugin:**
+   - Open the generated solution file (`.sln` or `.xcodeproj`)
+   - Set build configuration to "Development Editor"
+   - Build the solution (Ctrl+Shift+B on Windows, Cmd+B on Mac)
+
+4. **Enable the plugin:**
+   - Launch Unreal Engine Editor
+   - Go to Edit → Plugins
+   - Search for "Modular Station Designer"
+   - Check the "Enabled" checkbox
+   - Restart the editor when prompted
+
+#### Option 2: Engine Plugins Directory (System-Wide)
+
+1. **Clone to engine plugins:**
+   ```bash
+   cd /path/to/UnrealEngine/Engine/Plugins
+   git clone https://github.com/Mittenzx/AdastreaStationEditor.git ModularStationDesigner
+   ```
+
+2. **Rebuild the engine** (if using source version) or regenerate project files for your project
+
+3. **Enable the plugin** in your project as described in Option 1, step 4
+
+### For CCO (Unreal Editor)
+
+CCO stands for "Content Creation Only" - using the Unreal Editor without building from source.
+
+1. **Download or clone the plugin:**
+   ```bash
+   # Navigate to your project's Plugins directory
+   cd /path/to/YourProject/Plugins
+   git clone https://github.com/Mittenzx/AdastreaStationEditor.git ModularStationDesigner
+   ```
+
+2. **Open your project:**
+   - Launch Unreal Engine from Epic Games Launcher
+   - Open your Adastrea project
+   - If prompted about missing modules, click "Yes" to rebuild
+
+3. **Enable the plugin:**
+   - Go to Edit → Plugins
+   - Search for "Modular Station Designer"
+   - Enable the plugin
+   - Restart the editor
+
+4. **Verify installation:**
+   - Check the Output Log (Window → Developer Tools → Output Log)
+   - Look for: `LogPluginManager: Mounting plugin ModularStationDesigner`
+   - No errors should appear
+
+### Verification
+
+Once installed, you can verify the plugin is working:
+
+1. Open the Output Log: Window → Developer Tools → Output Log
+2. Search for "ModularStationDesigner" or "StationBuilder"
+3. You should see messages indicating the plugin loaded successfully
+
+**Note:** The plugin is currently in active development. The UI and features are being implemented according to the [roadmap](ROADMAP.md).
 
 ## Project Status
 
-**Current Phase**: All Phases Complete ✅ - Release 1.0 Ready
+**Current Phase**: 🚧 Phase 1 - Foundation & Core Structure (In Progress)
 
-**Completed:**
-- ✅ Phase 0: Repository structure and documentation
-- ✅ Phase 1: Core functionality (plugin structure, connection system, UI framework)
-- ✅ Phase 2: Export & polish (validation, save/load, Blueprint generation)
-- ✅ Phase 3: Advanced features (templates, advanced tools, visualization)
+**What's Complete:**
+- ✅ Repository structure and comprehensive documentation
+- ✅ Plugin architecture and module structure designed
+- ✅ Core C++ classes created (connection points, validators, exporters)
+- ✅ Build configuration (`.Build.cs` files)
+- ✅ Plugin descriptor (`.uplugin`)
 
-**Release:** Version 1.0 - Feature Complete
+**In Progress:**
+- 🚧 Core feature implementation
+- 🚧 Module discovery system
+- 🚧 Connection point behavior
+- 🚧 User interface implementation
 
-See [ROADMAP.md](ROADMAP.md) for detailed development timeline and milestones.
+**Planned:**
+- 📋 Phase 2: Export system, validation, save/load
+- 📋 Phase 3: Templates, advanced tools, visualization
+
+**Current Version:** 0.1.0-alpha (Development)
+
+See [ROADMAP.md](ROADMAP.md) for detailed development timeline and progress.
 
 ## Documentation
 
-- [Roadmap](ROADMAP.md) - Development phases and timeline
+- [Roadmap](ROADMAP.md) - Development phases, timeline, and current progress
 - [Architecture](docs/ARCHITECTURE.md) - Technical design and structure
+- [Setup Guide](docs/SETUP.md) - Development environment setup
+- [User Guide](docs/USER_GUIDE.md) - Usage instructions (for future features)
 - [Contributing](CONTRIBUTING.md) - How to contribute to the project
 - [Station Builder Specification](STATION_BUILDER_PLUGIN_SPECIFICATION.md) - Complete feature specification
 
 ## Development Timeline
 
-- **Phase 1** (Weeks 1-4): Core functionality - Module discovery, basic UI, connection system
-- **Phase 2** (Weeks 5-8): Export & polish - Blueprint generation, validation, save/load
-- **Phase 3** (Weeks 9-12): Advanced features - Templates, advanced tools, visualization
+- **Phase 0** (Complete): Repository setup and documentation
+- **Phase 1** (Weeks 1-4, In Progress): Core functionality - Module discovery, basic UI, connection system
+- **Phase 2** (Weeks 5-8, Planned): Export & polish - Blueprint generation, validation, save/load
+- **Phase 3** (Weeks 9-12, Planned): Advanced features - Templates, advanced tools, visualization
 
-## Success Metrics
+## Target Success Metrics
 
 - 5-10x faster than manual module placement
 - 60 FPS performance with 50+ modules
 - < 5 second export time for typical stations
 - < 2 second plugin load time
+
+## Troubleshooting
+
+### Plugin doesn't appear in the plugins list
+- Verify the `.uplugin` file exists and is valid JSON
+- Check that the plugin is in the correct directory (`Plugins/ModularStationDesigner/`)
+- Regenerate project files
+
+### Build errors
+- Ensure you have Unreal Engine 5.4 or higher
+- Verify Visual Studio 2022 (Windows) or Xcode 14+ (Mac) is installed
+- Check that all dependencies in `.Build.cs` files are available
+- Try cleaning the build (delete `Binaries/` and `Intermediate/` directories)
+
+### Plugin fails to load
+- Check the Output Log for specific error messages
+- Verify the Adastrea project is set up correctly
+- Ensure all module dependencies are met
+
+For more detailed troubleshooting, see [docs/SETUP.md](docs/SETUP.md).
 
 ## Related Projects
 
@@ -89,6 +187,6 @@ For questions or feedback, please open an issue on GitHub.
 
 ---
 
-**Version**: 1.0.0  
-**Last Updated**: 2026-01-18  
-**Status**: Release 1.0 - Feature Complete ✅
+**Version**: 0.1.0-alpha  
+**Last Updated**: 2026-01-19  
+**Status**: In Active Development - Phase 1 🚧

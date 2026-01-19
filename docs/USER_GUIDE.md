@@ -1,8 +1,21 @@
 # Modular Station Designer - User Guide
 
-**Version**: 1.0  
-**Last Updated**: 2026-01-18  
-**Plugin Version**: 1.0.0
+**Version**: 0.1.0-alpha  
+**Last Updated**: 2026-01-19  
+**Plugin Version**: 0.1.0 (In Development)
+
+---
+
+## ⚠️ Development Status
+
+**This plugin is currently in active development.** Most features described in this guide are planned but not yet implemented. This document serves as a specification for the final user experience and will be updated as features are completed.
+
+**Current Status:**
+- ✅ Plugin structure and architecture complete
+- 🚧 Core features in development
+- 📋 UI and advanced features planned
+
+For the current implementation status, see [ROADMAP.md](../ROADMAP.md).
 
 ---
 
@@ -20,15 +33,18 @@
 
 ## Getting Started
 
-### Opening the Station Builder
+> **Note:** These features are planned for the 1.0 release. The plugin is currently in development.
 
+### Opening the Station Builder (Planned)
+
+Once implemented:
 1. Open your Unreal Engine project
 2. Navigate to **Tools → Station Builder** in the main menu
 3. The Station Builder window will open
 
-### Interface Overview
+### Interface Overview (Planned)
 
-The Station Builder interface consists of:
+The Station Builder interface will consist of:
 
 - **Toolbar**: Main actions (New, Load, Save, Export, Validate)
 - **Module Palette**: Available station modules organized by group
@@ -40,7 +56,9 @@ The Station Builder interface consists of:
 
 ## Basic Operations
 
-### Creating a New Station
+> **Note:** All features in this section are planned for Phase 1 & 2 implementation.
+
+### Creating a New Station (Planned)
 
 1. Click **New** in the toolbar
 2. Enter a station name
@@ -82,7 +100,9 @@ Modules automatically connect when:
 
 ## Advanced Features
 
-### Copy and Paste
+> **Note:** All features in this section are planned for Phase 3 implementation.
+
+### Copy and Paste (Planned)
 
 **Copy:**
 1. Select one or more modules
@@ -142,7 +162,9 @@ Modules automatically connect when:
 
 ## Templates
 
-### Using Templates
+> **Note:** Template features are planned for Phase 3 implementation.
+
+### Using Templates (Planned)
 
 **Load Template:**
 1. File → Load Template
@@ -175,7 +197,9 @@ Modules automatically connect when:
 
 ## Validation
 
-### Running Validation
+> **Note:** Validation features are planned for Phase 2 implementation.
+
+### Running Validation (Planned)
 
 **Manual Validation:**
 1. Click **Validate** button in toolbar
@@ -209,7 +233,9 @@ Modules automatically connect when:
 
 ## Export
 
-### Exporting to Blueprint
+> **Note:** Export features are planned for Phase 2 implementation.
+
+### Exporting to Blueprint (Planned)
 
 **Export Process:**
 1. Design station
@@ -236,7 +262,9 @@ Modules automatically connect when:
 
 ## Visualization Features
 
-### Power Flow Visualization
+> **Note:** Visualization features are planned for Phase 3 implementation.
+
+### Power Flow Visualization (Planned)
 
 **Enable/Disable:**
 - View → Show Power Flow
@@ -293,7 +321,9 @@ Modules automatically connect when:
 
 ## Keyboard Shortcuts
 
-### General
+> **Note:** Keyboard shortcuts will be implemented as features are completed.
+
+### General (Planned)
 - **Ctrl+N**: New station
 - **Ctrl+O**: Open station
 - **Ctrl+S**: Save station
@@ -429,11 +459,14 @@ Modules automatically connect when:
 
 ### Version History
 
-- **1.0.0** (2026-01-18): Initial release with all features
+- **0.1.0-alpha** (2026-01-19): Documentation updated to reflect development status
+- **1.0.0** (Planned): Initial release with all features
 
 ---
 
 **End of User Guide**
 
-For technical documentation, see `docs/ARCHITECTURE.md`  
-For contributing, see `CONTRIBUTING.md`
+**Note:** This guide describes the planned functionality. For current implementation status and how to contribute, see:
+- [ROADMAP.md](../ROADMAP.md) - Development progress
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Technical documentation  
+- [CONTRIBUTING.md](../CONTRIBUTING.md) - How to contribute
