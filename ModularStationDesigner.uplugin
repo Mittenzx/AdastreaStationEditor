@@ -1,7 +1,7 @@
 {
   "FileVersion": 3,
   "Version": 1,
-  "VersionName": "0.1.0-dev",
+  "VersionName": "1.0.0",
   "FriendlyName": "Modular Station Designer",
   "Description": "Visual station builder plugin for Adastrea - drag and drop modules with connection points to create space stations",
   "Category": "Level Design",

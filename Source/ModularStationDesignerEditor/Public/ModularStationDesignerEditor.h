@@ -17,7 +17,7 @@ class FModularStationDesignerEditorModule : public IModuleInterface
 public:
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
-	virtual void Shutdown Module() override;
+	virtual void ShutdownModule() override;
 
 private:
 	void RegisterMenus();
