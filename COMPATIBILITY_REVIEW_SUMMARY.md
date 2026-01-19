@@ -208,22 +208,24 @@ All modules must inherit from `ASpaceStationModule` to be discovered.
 
 ---
 
-## Backwards Compatibility
+## Optional Dependency Architecture
 
-The plugin maintains **backwards compatibility** with standalone development:
+The plugin uses **dynamic module loading** to support optional Adastrea integration:
 
 ### Standalone Mode (Without Adastrea)
-- ✅ Plugin compiles and runs
+- ✅ Plugin compiles and runs independently
 - ✅ Name-based module discovery (fallback)
 - ✅ Inferred module properties (fallback)
-- ✅ AActor Blueprint export (limited)
-- ⚠️ Missing full integration features
+- ✅ AActor Blueprint export (limited functionality)
+- ⚠️ Missing advanced integration features
 
 ### Integrated Mode (With Adastrea) - Recommended
 - ✅ Full inheritance-based discovery
-- ✅ Accurate module properties
+- ✅ Accurate module properties from Blueprint CDO
 - ✅ ASpaceStation Blueprint export
 - ✅ Complete Adastrea compatibility
+
+**Note**: The plugin uses `DynamicallyLoadedModuleNames` in Build.cs and compile-time detection via `__has_include()` to enable features when Adastrea is present without creating hard build dependencies.
 
 ---
 
@@ -291,16 +293,17 @@ Comprehensive documentation created:
 
 ## Conclusion
 
-The Modular Station Designer plugin is now **fully compatible** with the Adastrea game project's module system. All compatibility issues have been identified and resolved with proper conditional compilation to maintain standalone functionality.
+The Modular Station Designer plugin now supports **optional integration** with the Adastrea game project's module system. The plugin uses dynamic module loading and compile-time detection to enable advanced features when Adastrea is available, while maintaining standalone functionality.
 
 The plugin can now:
-- ✅ Discover modules correctly using inheritance
-- ✅ Read actual module properties from Blueprints
-- ✅ Export ASpaceStation Blueprints for Adastrea
-- ✅ Use shared type definitions
-- ✅ Maintain standalone development capability
+- ✅ Compile and run with or without Adastrea present
+- ✅ Discover modules using inheritance when Adastrea is available
+- ✅ Read actual module properties from Blueprints (with Adastrea)
+- ✅ Export ASpaceStation Blueprints when integrated
+- ✅ Fall back to name-based discovery in standalone mode
+- ✅ Use shared type definitions via conditional compilation
 
-**Status**: Ready for integration testing with Adastrea project.
+**Status**: Ready for integration testing with Adastrea project, or standalone testing without it.
 
 ---
 

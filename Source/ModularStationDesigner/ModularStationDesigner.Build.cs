@@ -22,12 +22,12 @@ public class ModularStationDesigner : ModuleRules
 			"JsonUtilities"
 		});
 
-		// Optional dependency on Adastrea module for runtime compatibility
-		// If Adastrea is present, we can use its classes directly
-		// If not, the plugin can still compile but won't have full integration
-		if (Target.Type == TargetType.Editor)
+		// Optional dependency on Adastrea module for enhanced integration
+		// The plugin will detect Adastrea at compile time via __has_include
+		// and enable advanced features when available
+		DynamicallyLoadedModuleNames.AddRange(new string[]
 		{
-			PrivateDependencyModuleNames.Add("Adastrea");
-		}
+			"Adastrea"
+		});
 	}
 }

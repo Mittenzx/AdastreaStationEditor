@@ -60,31 +60,42 @@ The plugin uses Adastrea's `EStationModuleGroup` enum when integrated:
 
 ## Build Configuration
 
-### With Adastrea Integration (Recommended)
+### Dynamic Loading Architecture
 
-When the plugin is built as part of the Adastrea project or with Adastrea modules available:
+The plugin uses **dynamic module loading** to support optional Adastrea integration without hard dependencies:
 
 ```cs
 // ModularStationDesignerEditor.Build.cs
-PrivateDependencyModuleNames.Add("Adastrea");
+DynamicallyLoadedModuleNames.AddRange(new string[]
+{
+    "Adastrea"  // Optional - loaded at runtime if available
+});
 ```
 
+### With Adastrea Integration (Recommended)
+
+When Adastrea headers are available at compile time (detected via `__has_include()`):
+
 **Enabled Features:**
-- ✅ Inheritance-based module discovery
+- ✅ Inheritance-based module discovery via `ASpaceStationModule`
 - ✅ Actual property reading from Blueprint CDOs
 - ✅ `ASpaceStation` Blueprint generation
 - ✅ Full module metadata (type, power, group)
 - ✅ Uses Adastrea's `EStationModuleGroup` enum
+- ✅ `ADASTREA_INTEGRATION_ENABLED` compile flag set
 
 ### Standalone Mode (Fallback)
 
-When the plugin is built without Adastrea modules:
+When the plugin is built without Adastrea headers present:
 
 **Fallback Behavior:**
-- ⚠️ Name-based module discovery (less accurate)
+- ⚠️ Name-based module discovery (pattern matching)
 - ⚠️ Inferred module properties from names
 - ⚠️ `AActor` Blueprint generation (limited functionality)
 - ⚠️ Uses local `EStationModuleGroup` enum copy
+- ⚠️ `ADASTREA_INTEGRATION_ENABLED` not defined
+
+**Note**: The plugin will compile successfully in either mode. Conditional compilation ensures code references to Adastrea types are only active when headers are available.
 
 ---
 

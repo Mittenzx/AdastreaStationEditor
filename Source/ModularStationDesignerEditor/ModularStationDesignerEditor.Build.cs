@@ -38,9 +38,12 @@ public class ModularStationDesignerEditor : ModuleRules
 		});
 
 		// Optional dependency on Adastrea module for full integration
-		// If Adastrea is present, we can discover ASpaceStationModule classes
-		// and export to ASpaceStation Blueprints properly
-		// If not, the plugin uses fallback behavior
-		PrivateDependencyModuleNames.Add("Adastrea");
+		// The plugin detects Adastrea at compile time via __has_include
+		// When available: inheritance-based discovery, ASpaceStation Blueprints
+		// When absent: name-based discovery, AActor Blueprints (fallback mode)
+		DynamicallyLoadedModuleNames.AddRange(new string[]
+		{
+			"Adastrea"
+		});
 	}
 }

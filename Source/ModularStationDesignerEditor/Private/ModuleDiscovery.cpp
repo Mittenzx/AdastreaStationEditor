@@ -23,6 +23,9 @@ TArray<FModuleInfo> FModuleDiscovery::DiscoverModules()
 	AssetRegistry.GetAssetsByClass(UBlueprint::StaticClass()->GetClassPathName(), BlueprintAssets);
 
 	// Filter for station module Blueprints
+	// Note: This loads each Blueprint into memory to check inheritance.
+	// For large projects with many Blueprints, consider using AssetRegistry tags
+	// or implementing pagination/caching to improve performance.
 	for (const FAssetData& AssetData : BlueprintAssets)
 	{
 		UBlueprint* Blueprint = Cast<UBlueprint>(AssetData.GetAsset());
@@ -99,7 +102,14 @@ FModuleInfo FModuleDiscovery::ExtractModuleInfo(UBlueprint* Blueprint)
 		ASpaceStationModule* ModuleCDO = Cast<ASpaceStationModule>(Blueprint->GeneratedClass->GetDefaultObject());
 		if (ModuleCDO)
 		{
-			Info.ModuleType = ModuleCDO->GetModuleType();
+			// Defensive validation: ensure methods return valid data
+			// Note: If Adastrea API changes, these calls may need updates
+			FString ModuleTypeName = ModuleCDO->GetModuleType();
+			if (!ModuleTypeName.IsEmpty())
+			{
+				Info.ModuleType = ModuleTypeName;
+			}
+			
 			Info.PowerConsumption = ModuleCDO->GetModulePower();
 			Info.ModuleGroup = ModuleCDO->GetModuleGroup();
 			
