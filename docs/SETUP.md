@@ -2,11 +2,22 @@
 
 Complete guide for setting up your development environment for the Modular Station Designer plugin.
 
+**Last Updated**: 2026-01-19  
+**Plugin Version**: 0.1.0-alpha (In Development)
+
+---
+
+## Overview
+
+This guide covers setting up the plugin for development. The plugin is currently in active development (Phase 1), so this guide focuses on getting the development environment ready for implementation work.
+
+---
+
 ## Prerequisites
 
 ### Required Software
 
-1. **Unreal Engine 5.6** (or 5.4+)
+1. **Unreal Engine 5.4+** (5.6 recommended)
    - Download from [Epic Games Launcher](https://www.unrealengine.com/)
    - Install C++ development components
 
@@ -17,8 +28,9 @@ Complete guide for setting up your development environment for the Modular Stati
 3. **Git**
    - Download from [git-scm.com](https://git-scm.com/)
 
-4. **Adastrea Project** (for integration testing)
+4. **Adastrea Project** (optional, for integration testing)
    - Clone from [Adastrea repository](https://github.com/Mittenzx/Adastrea)
+   - Not strictly required for plugin development, but recommended for testing with actual Adastrea modules
 
 ### Optional Tools
 
@@ -111,29 +123,78 @@ Best for testing integration with actual Adastrea modules.
 
 ## Verifying Setup
 
-### 1. Check Plugin Load
+### 1. Check Plugin Structure
 
-Open Output Log (Window → Developer Tools → Output Log):
+Verify the repository was cloned correctly:
+
+**Windows (Command Prompt/PowerShell):**
+```cmd
+cd \path\to\ModularStationDesigner
+dir
+# Should see: Source/, Content/, ModularStationDesigner.uplugin, README.md, etc.
+```
+
+**Mac/Linux or Git Bash on Windows:**
+```bash
+cd /path/to/ModularStationDesigner
+ls -la
+# Should see: Source/, Content/, ModularStationDesigner.uplugin, README.md, etc.
+```
+
+### 2. Check Plugin Descriptor
+
+Verify the `.uplugin` file is valid:
+
+**Windows (Command Prompt):**
+```cmd
+type ModularStationDesigner.uplugin
+# Should be valid JSON with "Modules" array
+```
+
+**Windows (PowerShell):**
+```powershell
+Get-Content ModularStationDesigner.uplugin
+# Should be valid JSON with "Modules" array
+```
+
+**Mac/Linux or Git Bash on Windows:**
+```bash
+cat ModularStationDesigner.uplugin
+# Should be valid JSON with "Modules" array
+```
+
+### 3. Check Build Files
+
+Ensure build configuration files exist:
+
+**Windows:**
+```cmd
+dir Source\ModularStationDesigner\ModularStationDesigner.Build.cs
+dir Source\ModularStationDesignerEditor\ModularStationDesignerEditor.Build.cs
+```
+
+**Mac/Linux or Git Bash on Windows:**
+```bash
+ls Source/ModularStationDesigner/ModularStationDesigner.Build.cs
+ls Source/ModularStationDesignerEditor/ModularStationDesignerEditor.Build.cs
+```
+
+### 4. Check Plugin Load (After Building)
+
+Once the plugin is built, check the Output Log in UE Editor (Window → Developer Tools → Output Log):
 ```
 LogPluginManager: Mounting plugin ModularStationDesigner
-LogModularStationDesigner: Plugin initialized successfully
 ```
 
-No errors should appear.
+No errors should appear. If you see errors, check the error message for details.
 
-### 2. Access Plugin Window
+### 5. Verify Plugin in Editor
 
-Once implemented (Phase 1, Week 3+):
-- Tools → Station Builder
-- Window should open without errors
-
-### 3. Run Tests
-
-Once tests are implemented:
-- Window → Test Automation
-- Filter: "StationBuilder"
-- Run All
-- All tests should pass
+Once built and loaded:
+- Edit → Plugins
+- Search "Modular Station Designer"
+- Plugin should appear in the list
+- Enable checkbox should be available
 
 ---
 
@@ -330,6 +391,6 @@ Happy coding!
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: 2026-01-18  
-**Status**: Active
+**Document Version**: 1.1  
+**Last Updated**: 2026-01-19  
+**Status**: Active - Updated for development phase
