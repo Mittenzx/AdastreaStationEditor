@@ -1,11 +1,14 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "StationDesignerWindow.h"
+#include "ModulePalette.h"
+#include "StationViewport.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
+#include "Widgets/Layout/SSplitter.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Input/SButton.h"
-#include "EditorStyleSet.h"
+#include "Styling/AppStyle.h"
 
 #define LOCTEXT_NAMESPACE "StationDesignerWindow"
 
@@ -99,11 +102,75 @@ TSharedRef<SWidget> SStationDesignerWindow::CreateToolbar()
 TSharedRef<SWidget> SStationDesignerWindow::CreateMainContent()
 {
 	return SNew(SBorder)
-		.Padding(10.0f)
+		.Padding(4.0f)
 		[
-			SNew(STextBlock)
-			.Text(LOCTEXT("MainContentPlaceholder", "Station Designer - Main Content Area\n\nThis would contain:\n- Module Palette (left panel)\n- 3D Viewport (center)\n- Properties Panel (right)"))
-			.Justification(ETextJustify::Center)
+			SNew(SSplitter)
+			.Orientation(Orient_Horizontal)
+
+			// Left panel - Module Palette
+			+ SSplitter::Slot()
+			.Value(0.25f)
+			[
+				SNew(SBorder)
+				.BorderImage(FAppStyle::GetBrush("ToolPanel.GroupBorder"))
+				.Padding(4.0f)
+				[
+					SNew(SVerticalBox)
+					
+					// Palette header
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					.Padding(0.0f, 0.0f, 0.0f, 4.0f)
+					[
+						SNew(STextBlock)
+						.Text(LOCTEXT("ModulePaletteTitle", "Module Palette"))
+						.Font(FAppStyle::GetFontStyle("BoldFont"))
+					]
+
+					// Palette content
+					+ SVerticalBox::Slot()
+					.FillHeight(1.0f)
+					[
+						SAssignNew(ModulePalette, SModulePalette)
+					]
+				]
+			]
+
+			// Center panel - 3D Viewport
+			+ SSplitter::Slot()
+			.Value(0.55f)
+			[
+				SAssignNew(StationViewport, SStationViewport)
+			]
+
+			// Right panel - Properties (placeholder)
+			+ SSplitter::Slot()
+			.Value(0.20f)
+			[
+				SNew(SBorder)
+				.BorderImage(FAppStyle::GetBrush("ToolPanel.GroupBorder"))
+				.Padding(10.0f)
+				[
+					SNew(SVerticalBox)
+					
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNew(STextBlock)
+						.Text(LOCTEXT("PropertiesTitle", "Properties"))
+						.Font(FAppStyle::GetFontStyle("BoldFont"))
+					]
+
+					+ SVerticalBox::Slot()
+					.FillHeight(1.0f)
+					.Padding(0.0f, 10.0f, 0.0f, 0.0f)
+					[
+						SNew(STextBlock)
+						.Text(LOCTEXT("PropertiesPlaceholder", "Select a module to view properties"))
+						.AutoWrapText(true)
+					]
+				]
+			]
 		];
 }
 
@@ -113,13 +180,29 @@ TSharedRef<SWidget> SStationDesignerWindow::CreateStatusBar()
 		.Padding(5.0f)
 		[
 			SNew(STextBlock)
-			.Text(LOCTEXT("StatusBar", "Ready | Modules: 0 | Power Balance: 0 MW"))
+			// Lambda lifetime: Safe because Slate manages widget lifetime and this lambda
+			// will not outlive the SStationDesignerWindow due to parent-child relationship
+			.Text_Lambda([this]() {
+				if (StationViewport.IsValid())
+				{
+					const FStationDesign& Design = StationViewport->GetCurrentDesign();
+					return FText::FromString(FString::Printf(
+						TEXT("Ready | Modules: %d | Station: %s"),
+						Design.Modules.Num(),
+						*Design.StationName));
+				}
+				return LOCTEXT("StatusBarDefault", "Ready");
+			})
 		];
 }
 
 FReply SStationDesignerWindow::OnNewStation()
 {
 	CurrentDesign = FStationDesign();
+	if (StationViewport.IsValid())
+	{
+		StationViewport->SetCurrentDesign(CurrentDesign);
+	}
 	UE_LOG(LogTemp, Log, TEXT("New station created"));
 	return FReply::Handled();
 }
@@ -127,24 +210,41 @@ FReply SStationDesignerWindow::OnNewStation()
 FReply SStationDesignerWindow::OnLoadStation()
 {
 	UE_LOG(LogTemp, Log, TEXT("Load station clicked"));
+	// TODO: Implement load functionality
 	return FReply::Handled();
 }
 
 FReply SStationDesignerWindow::OnSaveStation()
 {
-	UE_LOG(LogTemp, Log, TEXT("Save station clicked"));
+	if (StationViewport.IsValid())
+	{
+		CurrentDesign = StationViewport->GetCurrentDesign();
+		UE_LOG(LogTemp, Log, TEXT("Saving station: %s with %d modules"),
+			*CurrentDesign.StationName, CurrentDesign.Modules.Num());
+	}
+	// TODO: Implement save functionality
 	return FReply::Handled();
 }
 
 FReply SStationDesignerWindow::OnExportStation()
 {
-	UE_LOG(LogTemp, Log, TEXT("Export station clicked"));
+	if (StationViewport.IsValid())
+	{
+		CurrentDesign = StationViewport->GetCurrentDesign();
+		UE_LOG(LogTemp, Log, TEXT("Exporting station: %s"), *CurrentDesign.StationName);
+	}
+	// TODO: Implement export functionality
 	return FReply::Handled();
 }
 
 FReply SStationDesignerWindow::OnValidateStation()
 {
-	UE_LOG(LogTemp, Log, TEXT("Validate station clicked"));
+	if (StationViewport.IsValid())
+	{
+		CurrentDesign = StationViewport->GetCurrentDesign();
+		UE_LOG(LogTemp, Log, TEXT("Validating station: %s"), *CurrentDesign.StationName);
+	}
+	// TODO: Implement validation functionality
 	return FReply::Handled();
 }
 

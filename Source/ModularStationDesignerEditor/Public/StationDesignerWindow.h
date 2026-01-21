@@ -6,6 +6,9 @@
 #include "Widgets/SCompoundWidget.h"
 #include "StationDesignerTypes.h"
 
+class SModulePalette;
+class SStationViewport;
+
 /**
  * Main Station Designer Window (Slate UI)
  * Provides the complete interface for designing stations
@@ -22,6 +25,10 @@ public:
 private:
 	// Current station design
 	FStationDesign CurrentDesign;
+
+	// UI Components
+	TSharedPtr<SModulePalette> ModulePalette;
+	TSharedPtr<SStationViewport> StationViewport;
 
 	// UI event handlers
 	FReply OnNewStation();
