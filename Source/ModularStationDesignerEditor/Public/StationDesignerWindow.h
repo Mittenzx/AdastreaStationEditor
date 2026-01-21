@@ -6,6 +6,9 @@
 #include "Widgets/SCompoundWidget.h"
 #include "StationDesignerTypes.h"
 
+class SModulePalette;
+class SPropertiesPanel;
+
 /**
  * Main Station Designer Window (Slate UI)
  * Provides the complete interface for designing stations
@@ -22,6 +25,10 @@ public:
 private:
 	// Current station design
 	FStationDesign CurrentDesign;
+	
+	// UI panels
+	TSharedPtr<SModulePalette> ModulePalette;
+	TSharedPtr<SPropertiesPanel> PropertiesPanel;
 
 	// UI event handlers
 	FReply OnNewStation();
@@ -29,9 +36,18 @@ private:
 	FReply OnSaveStation();
 	FReply OnExportStation();
 	FReply OnValidateStation();
+	FReply OnRefreshModules();
 
 	// Create UI sections
 	TSharedRef<SWidget> CreateToolbar();
 	TSharedRef<SWidget> CreateMainContent();
 	TSharedRef<SWidget> CreateStatusBar();
+	TSharedRef<SWidget> CreateModulePalettePanel();
+	TSharedRef<SWidget> CreateViewportPanel();
+	TSharedRef<SWidget> CreatePropertiesPanel();
+	
+	// Helper methods
+	void UpdateUI();
+	void SaveStationToFile(const FString& FilePath);
+	void LoadStationFromFile(const FString& FilePath);
 };
