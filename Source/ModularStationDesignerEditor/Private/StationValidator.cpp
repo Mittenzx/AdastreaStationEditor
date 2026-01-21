@@ -87,17 +87,77 @@ void FStationValidator::CheckConnectivity(const FStationDesign& Design, TArray<F
 		return; // Single module or empty station doesn't need connectivity check
 	}
 
-	// Check if all modules are connected (simplified check)
-	// In a full implementation, this would use graph traversal
+	// Build connectivity graph using module connections
+	TMap<FString, TSet<FString>> ConnectivityGraph;
 	for (const FModulePlacement& Module : Design.Modules)
 	{
-		if (Module.ConnectedModuleIDs.Num() == 0 && Design.Modules.Num() > 1)
+		if (!ConnectivityGraph.Contains(Module.ModuleID))
 		{
-			OutMessages.Add(FValidationMessage(
-				EValidationSeverity::Warning,
-				FString::Printf(TEXT("Module '%s' is not connected to other modules."), *Module.ComponentName),
-				Module.ModuleID
-			));
+			ConnectivityGraph.Add(Module.ModuleID, TSet<FString>());
+		}
+		
+		for (const FString& ConnectedID : Module.ConnectedModuleIDs)
+		{
+			ConnectivityGraph[Module.ModuleID].Add(ConnectedID);
+		}
+	}
+
+	// Perform BFS to check if all modules are reachable from the first module
+	if (Design.Modules.Num() > 0)
+	{
+		TSet<FString> Visited;
+		TArray<FString> Queue;
+		
+		// Start from first module
+		const FString& StartModuleID = Design.Modules[0].ModuleID;
+		Queue.Add(StartModuleID);
+		Visited.Add(StartModuleID);
+		
+		// BFS traversal
+		while (Queue.Num() > 0)
+		{
+			FString CurrentID = Queue[0];
+			Queue.RemoveAt(0);
+			
+			if (ConnectivityGraph.Contains(CurrentID))
+			{
+				for (const FString& NeighborID : ConnectivityGraph[CurrentID])
+				{
+					if (!Visited.Contains(NeighborID))
+					{
+						Visited.Add(NeighborID);
+						Queue.Add(NeighborID);
+					}
+				}
+			}
+		}
+		
+		// Check for orphaned modules
+		for (const FModulePlacement& Module : Design.Modules)
+		{
+			if (!Visited.Contains(Module.ModuleID))
+			{
+				OutMessages.Add(FValidationMessage(
+					EValidationSeverity::Error,
+					FString::Printf(TEXT("Module '%s' (ID: %s) is not connected to the main station. All modules must be connected."), 
+						*Module.ComponentName, *Module.ModuleID),
+					Module.ModuleID
+				));
+			}
+		}
+		
+		// Additional check for modules with no connections in multi-module stations
+		for (const FModulePlacement& Module : Design.Modules)
+		{
+			if (Module.ConnectedModuleIDs.Num() == 0 && Design.Modules.Num() > 1)
+			{
+				OutMessages.Add(FValidationMessage(
+					EValidationSeverity::Warning,
+					FString::Printf(TEXT("Module '%s' has no connections. It should be connected to at least one other module."), 
+						*Module.ComponentName),
+					Module.ModuleID
+				));
+			}
 		}
 	}
 }
