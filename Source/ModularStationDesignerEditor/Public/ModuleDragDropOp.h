@@ -22,7 +22,16 @@ public:
 	{
 		TSharedRef<FModuleDragDropOp> Operation = MakeShared<FModuleDragDropOp>();
 		Operation->ModuleInfo = InModuleInfo;
-		Operation->DefaultHoverText = FText::FromString(InModuleInfo->Name);
+		
+		if (InModuleInfo.IsValid())
+		{
+			Operation->DefaultHoverText = FText::FromString(InModuleInfo->Name);
+		}
+		else
+		{
+			Operation->DefaultHoverText = FText::FromString(TEXT("Invalid Module"));
+		}
+		
 		Operation->CurrentHoverText = Operation->DefaultHoverText;
 		Operation->Construct();
 		return Operation;

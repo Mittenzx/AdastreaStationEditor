@@ -5,9 +5,12 @@
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Text/STextBlock.h"
-#include "EditorStyleSet.h"
+#include "Styling/AppStyle.h"
 
 #define LOCTEXT_NAMESPACE "StationViewport"
+
+// Coordinate space conversion from 2D screen space to 3D world space
+static constexpr float ScreenToWorldScale = 10.0f;
 
 void SStationViewport::Construct(const FArguments& InArgs)
 {
@@ -23,7 +26,7 @@ void SStationViewport::Construct(const FArguments& InArgs)
 TSharedRef<SWidget> SStationViewport::CreateViewportContent()
 {
 	return SNew(SBorder)
-		.BorderImage(FEditorStyle::GetBrush("ToolPanel.DarkGroupBorder"))
+		.BorderImage(FAppStyle::GetBrush("ToolPanel.DarkGroupBorder"))
 		.Padding(10.0f)
 		[
 			SNew(SVerticalBox)
@@ -35,7 +38,7 @@ TSharedRef<SWidget> SStationViewport::CreateViewportContent()
 			[
 				SNew(STextBlock)
 				.Text(LOCTEXT("ViewportTitle", "3D Station Viewport"))
-				.Font(FEditorStyle::GetFontStyle("BoldFont"))
+				.Font(FAppStyle::GetFontStyle("BoldFont"))
 			]
 
 			// Viewport content area
@@ -43,7 +46,7 @@ TSharedRef<SWidget> SStationViewport::CreateViewportContent()
 			.FillHeight(1.0f)
 			[
 				SNew(SBorder)
-				.BorderImage(FEditorStyle::GetBrush("ToolPanel.GroupBorder"))
+				.BorderImage(FAppStyle::GetBrush("ToolPanel.GroupBorder"))
 				.Padding(20.0f)
 				[
 					SNew(SBox)
@@ -59,7 +62,7 @@ TSharedRef<SWidget> SStationViewport::CreateViewportContent()
 							SNew(STextBlock)
 							.Text(LOCTEXT("ViewportPlaceholder", "3D Viewport Visualization"))
 							.Justification(ETextJustify::Center)
-							.Font(FEditorStyle::GetFontStyle("LargeFont"))
+							.Font(FAppStyle::GetFontStyle("LargeFont"))
 						]
 
 						// Instructions
@@ -145,7 +148,7 @@ FReply SStationViewport::OnDrop(const FGeometry& MyGeometry, const FDragDropEven
 	{
 		// Calculate drop position
 		FVector2D LocalPos = MyGeometry.AbsoluteToLocal(DragDropEvent.GetScreenSpacePosition());
-		FVector DropLocation(LocalPos.X * 10.0f, LocalPos.Y * 10.0f, 0.0f); // Scale for 3D space
+		FVector DropLocation(LocalPos.X * ScreenToWorldScale, LocalPos.Y * ScreenToWorldScale, 0.0f);
 		
 		FTransform DropTransform;
 		DropTransform.SetLocation(DropLocation);

@@ -9,7 +9,7 @@
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Images/SImage.h"
-#include "EditorStyleSet.h"
+#include "Styling/AppStyle.h"
 
 #define LOCTEXT_NAMESPACE "ModulePalette"
 
@@ -85,7 +85,7 @@ TSharedRef<ITableRow> SModulePalette::OnGenerateModuleRow(
 		[
 			SNew(SBorder)
 			.Padding(4.0f)
-			.BorderImage(FEditorStyle::GetBrush("ToolPanel.GroupBorder"))
+			.BorderImage(FAppStyle::GetBrush("ToolPanel.GroupBorder"))
 			[
 				SNew(SHorizontalBox)
 
@@ -99,7 +99,7 @@ TSharedRef<ITableRow> SModulePalette::OnGenerateModuleRow(
 					.HeightOverride(48.0f)
 					[
 						SNew(SBorder)
-						.BorderImage(FEditorStyle::GetBrush("ToolPanel.DarkGroupBorder"))
+						.BorderImage(FAppStyle::GetBrush("ToolPanel.DarkGroupBorder"))
 						[
 							SNew(STextBlock)
 							.Text(FText::FromString(TEXT("?")))
@@ -122,7 +122,7 @@ TSharedRef<ITableRow> SModulePalette::OnGenerateModuleRow(
 					[
 						SNew(STextBlock)
 						.Text(FText::FromString(Item->Name))
-						.Font(FEditorStyle::GetFontStyle("BoldFont"))
+						.Font(FAppStyle::GetFontStyle("BoldFont"))
 					]
 
 					// Module type and power
@@ -132,7 +132,7 @@ TSharedRef<ITableRow> SModulePalette::OnGenerateModuleRow(
 						SNew(STextBlock)
 						.Text(FText::FromString(FString::Printf(TEXT("%s | Power: %.1f MW"),
 							*Item->ModuleType, Item->PowerConsumption)))
-						.Font(FEditorStyle::GetFontStyle("SmallFont"))
+						.Font(FAppStyle::GetFontStyle("SmallFont"))
 					]
 				]
 			]
@@ -178,8 +178,8 @@ void SModulePalette::ApplyFilters()
 		// Apply search filter
 		if (!CurrentSearchText.IsEmpty())
 		{
-			if (!Module->Name.Contains(CurrentSearchText) &&
-				!Module->ModuleType.Contains(CurrentSearchText))
+			if (!Module->Name.Contains(CurrentSearchText, ESearchCase::IgnoreCase) &&
+				!Module->ModuleType.Contains(CurrentSearchText, ESearchCase::IgnoreCase))
 			{
 				continue;
 			}

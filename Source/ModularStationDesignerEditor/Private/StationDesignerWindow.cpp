@@ -8,7 +8,7 @@
 #include "Widgets/Layout/SSplitter.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Input/SButton.h"
-#include "EditorStyleSet.h"
+#include "Styling/AppStyle.h"
 
 #define LOCTEXT_NAMESPACE "StationDesignerWindow"
 
@@ -112,7 +112,7 @@ TSharedRef<SWidget> SStationDesignerWindow::CreateMainContent()
 			.Value(0.25f)
 			[
 				SNew(SBorder)
-				.BorderImage(FEditorStyle::GetBrush("ToolPanel.GroupBorder"))
+				.BorderImage(FAppStyle::GetBrush("ToolPanel.GroupBorder"))
 				.Padding(4.0f)
 				[
 					SNew(SVerticalBox)
@@ -124,7 +124,7 @@ TSharedRef<SWidget> SStationDesignerWindow::CreateMainContent()
 					[
 						SNew(STextBlock)
 						.Text(LOCTEXT("ModulePaletteTitle", "Module Palette"))
-						.Font(FEditorStyle::GetFontStyle("BoldFont"))
+						.Font(FAppStyle::GetFontStyle("BoldFont"))
 					]
 
 					// Palette content
@@ -148,7 +148,7 @@ TSharedRef<SWidget> SStationDesignerWindow::CreateMainContent()
 			.Value(0.20f)
 			[
 				SNew(SBorder)
-				.BorderImage(FEditorStyle::GetBrush("ToolPanel.GroupBorder"))
+				.BorderImage(FAppStyle::GetBrush("ToolPanel.GroupBorder"))
 				.Padding(10.0f)
 				[
 					SNew(SVerticalBox)
@@ -158,7 +158,7 @@ TSharedRef<SWidget> SStationDesignerWindow::CreateMainContent()
 					[
 						SNew(STextBlock)
 						.Text(LOCTEXT("PropertiesTitle", "Properties"))
-						.Font(FEditorStyle::GetFontStyle("BoldFont"))
+						.Font(FAppStyle::GetFontStyle("BoldFont"))
 					]
 
 					+ SVerticalBox::Slot()
@@ -180,6 +180,8 @@ TSharedRef<SWidget> SStationDesignerWindow::CreateStatusBar()
 		.Padding(5.0f)
 		[
 			SNew(STextBlock)
+			// Lambda lifetime: Safe because Slate manages widget lifetime and this lambda
+			// will not outlive the SStationDesignerWindow due to parent-child relationship
 			.Text_Lambda([this]() {
 				if (StationViewport.IsValid())
 				{
