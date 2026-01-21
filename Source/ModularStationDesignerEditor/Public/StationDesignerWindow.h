@@ -8,6 +8,7 @@
 
 class SModulePalette;
 class SStationViewport;
+class SPropertiesPanel;
 
 /**
  * Main Station Designer Window (Slate UI)
@@ -29,6 +30,7 @@ private:
 	// UI Components
 	TSharedPtr<SModulePalette> ModulePalette;
 	TSharedPtr<SStationViewport> StationViewport;
+	TSharedPtr<SPropertiesPanel> PropertiesPanel;
 
 	// UI event handlers
 	FReply OnNewStation();
@@ -36,9 +38,18 @@ private:
 	FReply OnSaveStation();
 	FReply OnExportStation();
 	FReply OnValidateStation();
+	FReply OnRefreshModules();
 
 	// Create UI sections
 	TSharedRef<SWidget> CreateToolbar();
 	TSharedRef<SWidget> CreateMainContent();
 	TSharedRef<SWidget> CreateStatusBar();
+	TSharedRef<SWidget> CreateModulePalettePanel();
+	TSharedRef<SWidget> CreateViewportPanel();
+	TSharedRef<SWidget> CreatePropertiesPanel();
+
+	// Helper methods
+	void UpdateUI();
+	void SaveStationToFile(const FString& FilePath);
+	void LoadStationFromFile(const FString& FilePath);
 };

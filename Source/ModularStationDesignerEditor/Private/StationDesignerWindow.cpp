@@ -3,12 +3,15 @@
 #include "StationDesignerWindow.h"
 #include "ModulePalette.h"
 #include "StationViewport.h"
+#include "PropertiesPanel.h"
+#include "StationFileHelper.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SSplitter.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Input/SButton.h"
 #include "Styling/AppStyle.h"
+#include "DesktopPlatformModule.h"
 
 #define LOCTEXT_NAMESPACE "StationDesignerWindow"
 
@@ -28,7 +31,7 @@ void SStationDesignerWindow::Construct(const FArguments& InArgs)
 			CreateToolbar()
 		]
 
-		// Main content area
+		// Main content area with splitter
 		+ SVerticalBox::Slot()
 		.FillHeight(1.0f)
 		[
@@ -55,6 +58,7 @@ TSharedRef<SWidget> SStationDesignerWindow::CreateToolbar()
 		[
 			SNew(SButton)
 			.Text(LOCTEXT("NewButton", "New"))
+			.ToolTipText(LOCTEXT("NewButtonTooltip", "Create a new station design"))
 			.OnClicked(this, &SStationDesignerWindow::OnNewStation)
 		]
 
@@ -65,6 +69,7 @@ TSharedRef<SWidget> SStationDesignerWindow::CreateToolbar()
 		[
 			SNew(SButton)
 			.Text(LOCTEXT("LoadButton", "Load"))
+			.ToolTipText(LOCTEXT("LoadButtonTooltip", "Load a station design from file"))
 			.OnClicked(this, &SStationDesignerWindow::OnLoadStation)
 		]
 
@@ -75,6 +80,7 @@ TSharedRef<SWidget> SStationDesignerWindow::CreateToolbar()
 		[
 			SNew(SButton)
 			.Text(LOCTEXT("SaveButton", "Save"))
+			.ToolTipText(LOCTEXT("SaveButtonTooltip", "Save the current station design"))
 			.OnClicked(this, &SStationDesignerWindow::OnSaveStation)
 		]
 
@@ -85,6 +91,7 @@ TSharedRef<SWidget> SStationDesignerWindow::CreateToolbar()
 		[
 			SNew(SButton)
 			.Text(LOCTEXT("ExportButton", "Export"))
+			.ToolTipText(LOCTEXT("ExportButtonTooltip", "Export station to Blueprint"))
 			.OnClicked(this, &SStationDesignerWindow::OnExportStation)
 		]
 
@@ -95,82 +102,54 @@ TSharedRef<SWidget> SStationDesignerWindow::CreateToolbar()
 		[
 			SNew(SButton)
 			.Text(LOCTEXT("ValidateButton", "Validate"))
+			.ToolTipText(LOCTEXT("ValidateButtonTooltip", "Check station design for issues"))
 			.OnClicked(this, &SStationDesignerWindow::OnValidateStation)
+		]
+		
+		// Spacer
+		+ SHorizontalBox::Slot()
+		.FillWidth(1.0f)
+		[
+			SNew(SSpacer)
+		]
+		
+		// Refresh modules button
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.Padding(2.0f)
+		[
+			SNew(SButton)
+			.Text(LOCTEXT("RefreshButton", "Refresh Modules"))
+			.ToolTipText(LOCTEXT("RefreshButtonTooltip", "Rescan for available modules"))
+			.OnClicked(this, &SStationDesignerWindow::OnRefreshModules)
 		];
 }
 
 TSharedRef<SWidget> SStationDesignerWindow::CreateMainContent()
 {
-	return SNew(SBorder)
-		.Padding(4.0f)
+	// Three-panel layout: Module Palette | 3D Viewport | Properties Panel
+	return SNew(SSplitter)
+		.Orientation(Orient_Horizontal)
+		
+		// Left panel: Module Palette
+		+ SSplitter::Slot()
+		.Value(0.2f)
 		[
-			SNew(SSplitter)
-			.Orientation(Orient_Horizontal)
-
-			// Left panel - Module Palette
-			+ SSplitter::Slot()
-			.Value(0.25f)
-			[
-				SNew(SBorder)
-				.BorderImage(FAppStyle::GetBrush("ToolPanel.GroupBorder"))
-				.Padding(4.0f)
-				[
-					SNew(SVerticalBox)
-					
-					// Palette header
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					.Padding(0.0f, 0.0f, 0.0f, 4.0f)
-					[
-						SNew(STextBlock)
-						.Text(LOCTEXT("ModulePaletteTitle", "Module Palette"))
-						.Font(FAppStyle::GetFontStyle("BoldFont"))
-					]
-
-					// Palette content
-					+ SVerticalBox::Slot()
-					.FillHeight(1.0f)
-					[
-						SAssignNew(ModulePalette, SModulePalette)
-					]
-				]
-			]
-
-			// Center panel - 3D Viewport
-			+ SSplitter::Slot()
-			.Value(0.55f)
-			[
-				SAssignNew(StationViewport, SStationViewport)
-			]
-
-			// Right panel - Properties (placeholder)
-			+ SSplitter::Slot()
-			.Value(0.20f)
-			[
-				SNew(SBorder)
-				.BorderImage(FAppStyle::GetBrush("ToolPanel.GroupBorder"))
-				.Padding(10.0f)
-				[
-					SNew(SVerticalBox)
-					
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					[
-						SNew(STextBlock)
-						.Text(LOCTEXT("PropertiesTitle", "Properties"))
-						.Font(FAppStyle::GetFontStyle("BoldFont"))
-					]
-
-					+ SVerticalBox::Slot()
-					.FillHeight(1.0f)
-					.Padding(0.0f, 10.0f, 0.0f, 0.0f)
-					[
-						SNew(STextBlock)
-						.Text(LOCTEXT("PropertiesPlaceholder", "Select a module to view properties"))
-						.AutoWrapText(true)
-					]
-				]
-			]
+			CreateModulePalettePanel()
+		]
+		
+		// Center panel: 3D Viewport
+		+ SSplitter::Slot()
+		.Value(0.6f)
+		[
+			CreateViewportPanel()
+		]
+		
+		// Right panel: Properties
+		+ SSplitter::Slot()
+		.Value(0.2f)
+		[
+			CreatePropertiesPanel()
 		];
 }
 
@@ -180,72 +159,229 @@ TSharedRef<SWidget> SStationDesignerWindow::CreateStatusBar()
 		.Padding(5.0f)
 		[
 			SNew(STextBlock)
-			// Lambda lifetime: Safe because Slate manages widget lifetime and this lambda
-			// will not outlive the SStationDesignerWindow due to parent-child relationship
-			.Text_Lambda([this]() {
-				if (StationViewport.IsValid())
-				{
-					const FStationDesign& Design = StationViewport->GetCurrentDesign();
-					return FText::FromString(FString::Printf(
-						TEXT("Ready | Modules: %d | Station: %s"),
-						Design.Modules.Num(),
-						*Design.StationName));
-				}
-				return LOCTEXT("StatusBarDefault", "Ready");
+			.Text_Lambda([this]()
+			{
+				int32 ModuleCount = CurrentDesign.Modules.Num();
+				return FText::Format(
+					LOCTEXT("StatusBar", "Ready | Modules: {0} | Power Balance: 0 MW"),
+					FText::AsNumber(ModuleCount)
+				);
 			})
+		];
+}
+
+TSharedRef<SWidget> SStationDesignerWindow::CreateModulePalettePanel()
+{
+	return SNew(SBorder)
+		.Padding(5.0f)
+		.BorderBackgroundColor(FLinearColor(0.02f, 0.02f, 0.02f, 1.0f))
+		[
+			SNew(SVerticalBox)
+			
+			// Panel header
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(5.0f)
+			[
+				SNew(STextBlock)
+				.Text(LOCTEXT("ModulePaletteHeader", "Module Palette"))
+				.Font(FCoreStyle::GetDefaultFontStyle("Bold", 12))
+			]
+			
+			// Module palette widget
+			+ SVerticalBox::Slot()
+			.FillHeight(1.0f)
+			[
+				SAssignNew(ModulePalette, SModulePalette)
+			]
+		];
+}
+
+TSharedRef<SWidget> SStationDesignerWindow::CreateViewportPanel()
+{
+	return SNew(SBorder)
+		.Padding(5.0f)
+		.BorderBackgroundColor(FLinearColor(0.02f, 0.02f, 0.02f, 1.0f))
+		[
+			SNew(SVerticalBox)
+			
+			// Panel header
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(5.0f)
+			[
+				SNew(STextBlock)
+				.Text(LOCTEXT("ViewportHeader", "3D Viewport"))
+				.Font(FCoreStyle::GetDefaultFontStyle("Bold", 12))
+			]
+			
+			// Station viewport widget
+			+ SVerticalBox::Slot()
+			.FillHeight(1.0f)
+			[
+				SAssignNew(StationViewport, SStationViewport)
+				.StationDesign(&CurrentDesign)
+			]
+		];
+}
+
+TSharedRef<SWidget> SStationDesignerWindow::CreatePropertiesPanel()
+{
+	return SNew(SBorder)
+		.Padding(5.0f)
+		.BorderBackgroundColor(FLinearColor(0.02f, 0.02f, 0.02f, 1.0f))
+		[
+			SNew(SVerticalBox)
+			
+			// Panel header
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(5.0f)
+			[
+				SNew(STextBlock)
+				.Text(LOCTEXT("PropertiesPanelHeader", "Properties"))
+				.Font(FCoreStyle::GetDefaultFontStyle("Bold", 12))
+			]
+			
+			// Properties panel widget
+			+ SVerticalBox::Slot()
+			.FillHeight(1.0f)
+			[
+				SAssignNew(PropertiesPanel, SPropertiesPanel)
+			]
 		];
 }
 
 FReply SStationDesignerWindow::OnNewStation()
 {
 	CurrentDesign = FStationDesign();
-	if (StationViewport.IsValid())
-	{
-		StationViewport->SetCurrentDesign(CurrentDesign);
-	}
+	UpdateUI();
 	UE_LOG(LogTemp, Log, TEXT("New station created"));
 	return FReply::Handled();
 }
 
 FReply SStationDesignerWindow::OnLoadStation()
 {
+	// Open file dialog
+	IDesktopPlatform* DesktopPlatform = FDesktopPlatformModule::Get();
+	if (DesktopPlatform)
+	{
+		TArray<FString> OutFiles;
+		const FString DefaultPath = FPaths::ProjectSavedDir() / TEXT("StationDesigns");
+		
+		if (DesktopPlatform->OpenFileDialog(
+			nullptr,
+			TEXT("Load Station Design"),
+			DefaultPath,
+			TEXT(""),
+			TEXT("Station Design Files (*.station)|*.station"),
+			EFileDialogFlags::None,
+			OutFiles))
+		{
+			if (OutFiles.Num() > 0)
+			{
+				LoadStationFromFile(OutFiles[0]);
+			}
+		}
+	}
+	
 	UE_LOG(LogTemp, Log, TEXT("Load station clicked"));
-	// TODO: Implement load functionality
 	return FReply::Handled();
 }
 
 FReply SStationDesignerWindow::OnSaveStation()
 {
-	if (StationViewport.IsValid())
+	// Open save dialog
+	IDesktopPlatform* DesktopPlatform = FDesktopPlatformModule::Get();
+	if (DesktopPlatform)
 	{
-		CurrentDesign = StationViewport->GetCurrentDesign();
-		UE_LOG(LogTemp, Log, TEXT("Saving station: %s with %d modules"),
-			*CurrentDesign.StationName, CurrentDesign.Modules.Num());
+		TArray<FString> OutFiles;
+		const FString DefaultPath = FPaths::ProjectSavedDir() / TEXT("StationDesigns");
+		const FString DefaultFile = CurrentDesign.StationName + TEXT(".station");
+		
+		if (DesktopPlatform->SaveFileDialog(
+			nullptr,
+			TEXT("Save Station Design"),
+			DefaultPath,
+			DefaultFile,
+			TEXT("Station Design Files (*.station)|*.station"),
+			EFileDialogFlags::None,
+			OutFiles))
+		{
+			if (OutFiles.Num() > 0)
+			{
+				SaveStationToFile(OutFiles[0]);
+			}
+		}
 	}
-	// TODO: Implement save functionality
+	
+	UE_LOG(LogTemp, Log, TEXT("Save station clicked"));
 	return FReply::Handled();
 }
 
 FReply SStationDesignerWindow::OnExportStation()
 {
-	if (StationViewport.IsValid())
-	{
-		CurrentDesign = StationViewport->GetCurrentDesign();
-		UE_LOG(LogTemp, Log, TEXT("Exporting station: %s"), *CurrentDesign.StationName);
-	}
-	// TODO: Implement export functionality
+	// TODO: Implement Blueprint export using FStationExporter
+	UE_LOG(LogTemp, Log, TEXT("Export station clicked - Blueprint export not yet implemented"));
 	return FReply::Handled();
 }
 
 FReply SStationDesignerWindow::OnValidateStation()
 {
+	// TODO: Implement validation using FStationValidator
+	UE_LOG(LogTemp, Log, TEXT("Validate station clicked - Validation not yet implemented"));
+	return FReply::Handled();
+}
+
+FReply SStationDesignerWindow::OnRefreshModules()
+{
+	if (ModulePalette.IsValid())
+	{
+		ModulePalette->RefreshModuleList();
+		UE_LOG(LogTemp, Log, TEXT("Module list refreshed"));
+	}
+	return FReply::Handled();
+}
+
+void SStationDesignerWindow::UpdateUI()
+{
+	if (PropertiesPanel.IsValid())
+	{
+		PropertiesPanel->SetStationDesign(CurrentDesign);
+	}
+	
 	if (StationViewport.IsValid())
 	{
-		CurrentDesign = StationViewport->GetCurrentDesign();
-		UE_LOG(LogTemp, Log, TEXT("Validating station: %s"), *CurrentDesign.StationName);
+		// Viewport will automatically update based on CurrentDesign pointer
+		StationViewport->Invalidate(EInvalidateWidget::Paint);
 	}
-	// TODO: Implement validation functionality
-	return FReply::Handled();
+}
+
+void SStationDesignerWindow::SaveStationToFile(const FString& FilePath)
+{
+	// Delegate to FStationFileHelper to avoid duplication
+	if (FStationFileHelper::SaveStationToFile(CurrentDesign, FilePath))
+	{
+		UE_LOG(LogTemp, Log, TEXT("Station saved successfully to: %s"), *FilePath);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to save station to: %s"), *FilePath);
+	}
+}
+
+void SStationDesignerWindow::LoadStationFromFile(const FString& FilePath)
+{
+	// Delegate to FStationFileHelper to avoid duplication
+	if (FStationFileHelper::LoadStationFromFile(FilePath, CurrentDesign))
+	{
+		UpdateUI();
+		UE_LOG(LogTemp, Log, TEXT("Station loaded successfully from: %s"), *FilePath);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to load station from: %s"), *FilePath);
+	}
 }
 
 #undef LOCTEXT_NAMESPACE
