@@ -130,6 +130,10 @@ TArray<UConnectionPointComponent*> FSnappingHelper::FindConnectionPointsInRadius
 		return FoundPoints;
 	}
 	
+	// TODO: Performance optimization - TActorIterator can be expensive in large levels.
+	// Consider maintaining a spatial data structure (e.g., octree) or registry of modules
+	// with connection points for better performance during placement operations.
+	
 	// Iterate through all actors with connection points
 	for (TActorIterator<AActor> It(World); It; ++It)
 	{

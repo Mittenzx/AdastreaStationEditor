@@ -17,39 +17,39 @@ class SPropertiesPanel;
 class SStationDesignerWindow : public SCompoundWidget
 {
 public:
-SLATE_BEGIN_ARGS(SStationDesignerWindow) {}
-SLATE_END_ARGS()
+	SLATE_BEGIN_ARGS(SStationDesignerWindow) {}
+	SLATE_END_ARGS()
 
-/** Constructs this widget with InArgs */
-void Construct(const FArguments& InArgs);
+	/** Constructs this widget with InArgs */
+	void Construct(const FArguments& InArgs);
 
 private:
-// Current station design
-FStationDesign CurrentDesign;
+	// Current station design
+	FStationDesign CurrentDesign;
 
-// UI Components
-TSharedPtr<SModulePalette> ModulePalette;
-TSharedPtr<SStationViewport> StationViewport;
-TSharedPtr<SPropertiesPanel> PropertiesPanel;
+	// UI Components
+	TSharedPtr<SModulePalette> ModulePalette;
+	TSharedPtr<SStationViewport> StationViewport;
+	TSharedPtr<SPropertiesPanel> PropertiesPanel;
 
-// UI event handlers
-FReply OnNewStation();
-FReply OnLoadStation();
-FReply OnSaveStation();
-FReply OnExportStation();
-FReply OnValidateStation();
-FReply OnRefreshModules();
+	// UI event handlers
+	FReply OnNewStation();
+	FReply OnLoadStation();
+	FReply OnSaveStation();
+	FReply OnExportStation();
+	FReply OnValidateStation();
+	FReply OnRefreshModules();
 
-// Create UI sections
-TSharedRef<SWidget> CreateToolbar();
-TSharedRef<SWidget> CreateMainContent();
-TSharedRef<SWidget> CreateStatusBar();
-TSharedRef<SWidget> CreateModulePalettePanel();
-TSharedRef<SWidget> CreateViewportPanel();
-TSharedRef<SWidget> CreatePropertiesPanel();
+	// Create UI sections
+	TSharedRef<SWidget> CreateToolbar();
+	TSharedRef<SWidget> CreateMainContent();
+	TSharedRef<SWidget> CreateStatusBar();
+	TSharedRef<SWidget> CreateModulePalettePanel();
+	TSharedRef<SWidget> CreateViewportPanel();
+	TSharedRef<SWidget> CreatePropertiesPanel();
 
-// Helper methods
-void UpdateUI();
-void SaveStationToFile(const FString& FilePath);
-void LoadStationFromFile(const FString& FilePath);
+	// Helper methods
+	void UpdateUI();
+	void SaveStationToFile(const FString& FilePath);
+	void LoadStationFromFile(const FString& FilePath);
 };

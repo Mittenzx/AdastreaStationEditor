@@ -388,6 +388,8 @@ FText SPropertiesPanel::GetSelectedModuleTransform() const
 
 void SPropertiesPanel::OnStationNameChanged(const FText& NewName)
 {
+	// TODO: This modifies a local copy of CurrentDesign. Changes should be propagated
+	// back to SStationDesignerWindow through a callback mechanism or shared pointer.
 	CurrentDesign.StationName = NewName.ToString();
 }
 

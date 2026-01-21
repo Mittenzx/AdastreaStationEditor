@@ -18,13 +18,16 @@ bool FStationFileHelper::SaveStationToFile(const FStationDesign& Design, const F
 	if (bPrettyPrint)
 	{
 		// Pretty print with indentation
-		TSharedRef<FJsonObject> JsonObject = FJsonObjectConverter::UStructToJsonObject(Design);
-		if (JsonObject->Values.Num() > 0)
+		TSharedPtr<FJsonObject> JsonObject;
+		if (!FJsonObjectConverter::UStructToJsonObject(Design, JsonObject) || !JsonObject.IsValid() || JsonObject->Values.Num() == 0)
 		{
-			TSharedRef<TJsonWriter<TCHAR, TPrettyJsonPrintPolicy<TCHAR>>> JsonWriter = 
-				TJsonWriterFactory<TCHAR, TPrettyJsonPrintPolicy<TCHAR>>::Create(&JsonString);
-			FJsonSerializer::Serialize(JsonObject, JsonWriter);
+			UE_LOG(LogTemp, Error, TEXT("Failed to serialize station design to JSON (pretty print)"));
+			return false;
 		}
+
+		TSharedRef<TJsonWriter<TCHAR, TPrettyJsonPrintPolicy<TCHAR>>> JsonWriter =
+			TJsonWriterFactory<TCHAR, TPrettyJsonPrintPolicy<TCHAR>>::Create(&JsonString);
+		FJsonSerializer::Serialize(JsonObject.ToSharedRef(), JsonWriter);
 	}
 	else
 	{

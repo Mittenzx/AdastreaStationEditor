@@ -113,11 +113,11 @@ void FStationValidator::CheckConnectivity(const FStationDesign& Design, TArray<F
 		Queue.Add(StartModuleID);
 		Visited.Add(StartModuleID);
 		
-		// BFS traversal
-		while (Queue.Num() > 0)
+		// BFS traversal - use index instead of RemoveAt for O(n) complexity
+		int32 QueueIndex = 0;
+		while (QueueIndex < Queue.Num())
 		{
-			FString CurrentID = Queue[0];
-			Queue.RemoveAt(0);
+			const FString& CurrentID = Queue[QueueIndex++];
 			
 			if (ConnectivityGraph.Contains(CurrentID))
 			{
