@@ -91,8 +91,6 @@ This plugin supports **optional integration** with the Adastrea game project:
 
 See [Adastrea Compatibility Guide](docs/ADASTREA_COMPATIBILITY.md) for detailed integration information.
 
-CCO stands for "Content Creation Only" - using the Unreal Editor without building from source.
-
 1. **Download or clone the plugin:**
    ```bash
    # Navigate to your project's Plugins directory
