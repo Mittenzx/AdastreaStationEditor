@@ -14,7 +14,16 @@ static constexpr float ScreenToWorldScale = 10.0f;
 
 void SStationViewport::Construct(const FArguments& InArgs)
 {
-	CurrentDesign = FStationDesign();
+	// Initialize from arguments or use empty design
+	if (InArgs._StationDesign)
+	{
+		CurrentDesign = *InArgs._StationDesign;
+	}
+	else
+	{
+		CurrentDesign = FStationDesign();
+	}
+	
 	SelectedModuleIndex = INDEX_NONE;
 
 	ChildSlot
