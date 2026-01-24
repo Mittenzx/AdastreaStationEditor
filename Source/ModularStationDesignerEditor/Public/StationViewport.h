@@ -13,10 +13,10 @@
 class SStationViewport : public SCompoundWidget
 {
 public:
-	SLATE_BEGIN_ARGS(SStationViewport) 
+	SLATE_BEGIN_ARGS(SStationViewport)
 		: _StationDesign(nullptr)
-	{}
-	SLATE_ARGUMENT(FStationDesign*, StationDesign)
+		{}
+		SLATE_ARGUMENT(FStationDesign*, StationDesign)
 	SLATE_END_ARGS()
 
 	/** Constructs this widget with InArgs */
