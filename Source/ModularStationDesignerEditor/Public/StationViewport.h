@@ -32,17 +32,23 @@ public:
 	void ClearModules();
 
 	/** Get current design */
-	const FStationDesign& GetCurrentDesign() const { return CurrentDesign; }
+	const FStationDesign& GetCurrentDesign() const { return ExternalDesign ? *ExternalDesign : InternalDesign; }
 
 	/** Set current design */
 	void SetCurrentDesign(const FStationDesign& Design);
 
 private:
-	// Current station design
-	FStationDesign CurrentDesign;
+	// Pointer to external station design (if provided) or nullptr
+	FStationDesign* ExternalDesign;
+	
+	// Internal station design (used when no external design provided)
+	FStationDesign InternalDesign;
 
 	// Selected module index
 	int32 SelectedModuleIndex;
+	
+	// Get the active design (external if available, otherwise internal)
+	FStationDesign& GetActiveDesign() { return ExternalDesign ? *ExternalDesign : InternalDesign; }
 
 	// Generate viewport content
 	TSharedRef<SWidget> CreateViewportContent();

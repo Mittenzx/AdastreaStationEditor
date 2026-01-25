@@ -9,6 +9,7 @@
 #include "WorkspaceMenuStructureModule.h"
 #include "Widgets/Docking/SDockTab.h"
 #include "Framework/Application/SlateApplication.h"
+#include "Styling/AppStyle.h"
 
 #define LOCTEXT_NAMESPACE "FModularStationDesignerEditorModule"
 
@@ -36,6 +37,10 @@ void FModularStationDesignerEditorModule::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module
 	UE_LOG(LogTemp, Log, TEXT("ModularStationDesignerEditor: Module Shutdown"));
+
+	// Unregister ToolMenus startup callback and menu entries owned by this module
+	UToolMenus::UnRegisterStartupCallback(this);
+	UToolMenus::UnregisterOwner(this);
 
 	// Unregister tab spawner
 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(StationDesignerTabName);
@@ -72,7 +77,7 @@ void FModularStationDesignerEditorModule::OnStationBuilderButtonClicked()
 	FGlobalTabmanager::Get()->TryInvokeTab(StationDesignerTabName);
 }
 
-TSharedRef<SDockTab> FModularStationDesignerEditorModule::OnSpawnPluginTab(const FSpawnTabArgs& SpawnTabArgs)
+TSharedRef<SDockTab> FModularStationDesignerEditorModule::OnSpawnPluginTab(const FSpawnTabArgs& /*SpawnTabArgs*/)
 {
 	return SNew(SDockTab)
 		.TabRole(ETabRole::NomadTab)
