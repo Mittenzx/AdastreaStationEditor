@@ -14,7 +14,12 @@ static constexpr float ScreenToWorldScale = 10.0f;
 
 void SStationViewport::Construct(const FArguments& InArgs)
 {
-	CurrentDesign = FStationDesign();
+	// Store pointer to external design if provided
+	ExternalDesign = InArgs._StationDesign;
+	
+	// Initialize internal design (used as fallback)
+	InternalDesign = FStationDesign();
+	
 	SelectedModuleIndex = INDEX_NONE;
 
 	ChildSlot
@@ -88,7 +93,7 @@ TSharedRef<SWidget> SStationViewport::CreateViewportContent()
 							.Text_Lambda([this]() {
 								return FText::FromString(FString::Printf(
 									TEXT("Modules Placed: %d"),
-									CurrentDesign.Modules.Num()));
+									GetActiveDesign().Modules.Num()));
 							})
 							.Justification(ETextJustify::Center)
 						]
@@ -106,7 +111,7 @@ void SStationViewport::AddModule(const FModuleInfo& ModuleInfo, const FTransform
 	NewPlacement.Transform = Transform;
 	NewPlacement.ComponentName = ModuleInfo.Name;
 
-	CurrentDesign.Modules.Add(NewPlacement);
+	GetActiveDesign().Modules.Add(NewPlacement);
 
 	UE_LOG(LogTemp, Log, TEXT("Added module: %s at location %s"),
 		*ModuleInfo.Name, *Transform.GetLocation().ToString());
@@ -114,9 +119,9 @@ void SStationViewport::AddModule(const FModuleInfo& ModuleInfo, const FTransform
 
 void SStationViewport::RemoveSelectedModule()
 {
-	if (SelectedModuleIndex >= 0 && SelectedModuleIndex < CurrentDesign.Modules.Num())
+	if (SelectedModuleIndex >= 0 && SelectedModuleIndex < GetActiveDesign().Modules.Num())
 	{
-		CurrentDesign.Modules.RemoveAt(SelectedModuleIndex);
+		GetActiveDesign().Modules.RemoveAt(SelectedModuleIndex);
 		SelectedModuleIndex = INDEX_NONE;
 		UE_LOG(LogTemp, Log, TEXT("Removed selected module"));
 	}
@@ -124,14 +129,21 @@ void SStationViewport::RemoveSelectedModule()
 
 void SStationViewport::ClearModules()
 {
-	CurrentDesign.Modules.Empty();
+	GetActiveDesign().Modules.Empty();
 	SelectedModuleIndex = INDEX_NONE;
 	UE_LOG(LogTemp, Log, TEXT("Cleared all modules"));
 }
 
 void SStationViewport::SetCurrentDesign(const FStationDesign& Design)
 {
-	CurrentDesign = Design;
+	if (ExternalDesign)
+	{
+		*ExternalDesign = Design;
+	}
+	else
+	{
+		InternalDesign = Design;
+	}
 	SelectedModuleIndex = INDEX_NONE;
 }
 

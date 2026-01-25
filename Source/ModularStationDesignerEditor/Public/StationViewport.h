@@ -13,7 +13,10 @@
 class SStationViewport : public SCompoundWidget
 {
 public:
-	SLATE_BEGIN_ARGS(SStationViewport) {}
+	SLATE_BEGIN_ARGS(SStationViewport)
+		: _StationDesign(nullptr)
+		{}
+		SLATE_ARGUMENT(FStationDesign*, StationDesign)
 	SLATE_END_ARGS()
 
 	/** Constructs this widget with InArgs */
@@ -29,17 +32,23 @@ public:
 	void ClearModules();
 
 	/** Get current design */
-	const FStationDesign& GetCurrentDesign() const { return CurrentDesign; }
+	const FStationDesign& GetCurrentDesign() const { return ExternalDesign ? *ExternalDesign : InternalDesign; }
 
 	/** Set current design */
 	void SetCurrentDesign(const FStationDesign& Design);
 
 private:
-	// Current station design
-	FStationDesign CurrentDesign;
+	// Pointer to external station design (if provided) or nullptr
+	FStationDesign* ExternalDesign;
+	
+	// Internal station design (used when no external design provided)
+	FStationDesign InternalDesign;
 
 	// Selected module index
 	int32 SelectedModuleIndex;
+	
+	// Get the active design (external if available, otherwise internal)
+	FStationDesign& GetActiveDesign() { return ExternalDesign ? *ExternalDesign : InternalDesign; }
 
 	// Generate viewport content
 	TSharedRef<SWidget> CreateViewportContent();

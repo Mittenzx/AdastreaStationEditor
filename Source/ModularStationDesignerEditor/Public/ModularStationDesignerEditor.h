@@ -7,6 +7,8 @@
 
 class FToolBarBuilder;
 class FMenuBuilder;
+class SDockTab;
+class FSpawnTabArgs;
 
 /**
  * Modular Station Designer Editor Module
@@ -20,8 +22,17 @@ public:
 	virtual void ShutdownModule() override;
 
 private:
+	/** Register menus and extensions */
 	void RegisterMenus();
+	
+	/** Register menu extensions callback */
+	void RegisterMenuExtensions();
+	
+	/** Handle station builder menu button click */
 	void OnStationBuilderButtonClicked();
+	
+	/** Spawn the plugin tab */
+	TSharedRef<SDockTab> OnSpawnPluginTab(const FSpawnTabArgs& SpawnTabArgs);
 
 	TSharedPtr<class FUICommandList> PluginCommands;
 };
