@@ -8,6 +8,7 @@
 #include "CanvasItem.h"
 #include "CanvasTypes.h"
 #include "Engine/Canvas.h"
+#include "SceneManagement.h"
 
 FStationViewportClient::FStationViewportClient(FPreviewScene* InPreviewScene, const TWeakPtr<SEditorViewport>& InEditorViewportWidget)
 	: FEditorViewportClient(nullptr, InPreviewScene, InEditorViewportWidget)
