@@ -13,21 +13,14 @@ public class ModularStationDesigner : ModuleRules
 			"Core",
 			"CoreUObject",
 			"Engine",
-			"InputCore"
+			"InputCore",
+			"Adastrea"  // Required compile-time dependency
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[]
 		{
 			"Json",
 			"JsonUtilities"
-		});
-
-		// Optional dependency on Adastrea module for enhanced integration
-		// The plugin will detect Adastrea at compile time via __has_include
-		// and enable advanced features when available
-		DynamicallyLoadedModuleNames.AddRange(new string[]
-		{
-			"Adastrea"
 		});
 	}
 }
