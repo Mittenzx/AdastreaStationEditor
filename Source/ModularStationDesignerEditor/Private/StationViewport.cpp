@@ -1,28 +1,25 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-// NOTE: This is a PLACEHOLDER implementation of the 3D viewport.
-// It currently displays text-based instructions and module counts,
-// but does NOT render actual 3D geometry.
-//
-// To implement real 3D visualization:
-// 1. Replace SStationViewport to inherit from SEditorViewport
-// 2. Create FStationViewportClient derived from FEditorViewportClient
-// 3. Add UnrealEd module dependency in .Build.cs
-// 4. Implement OnDraw to render modules, connections, and visual indicators
-// 5. Add camera controls (orbit, pan, zoom)
-// 6. Integrate with FVisualizationSystem for power flow, connections, etc.
-
 #include "StationViewport.h"
+#include "StationViewportClient.h"
 #include "ModuleDragDropOp.h"
-#include "Widgets/Layout/SBorder.h"
-#include "Widgets/Layout/SBox.h"
-#include "Widgets/Text/STextBlock.h"
-#include "Styling/AppStyle.h"
+#include "PreviewScene.h"
+#include "SceneView.h"
 
 #define LOCTEXT_NAMESPACE "StationViewport"
 
 // Coordinate space conversion from 2D screen space to 3D world space
 static constexpr float ScreenToWorldScale = 10.0f;
+
+SStationViewport::SStationViewport()
+	: ExternalDesign(nullptr)
+	, SelectedModuleIndex(INDEX_NONE)
+{
+}
+
+SStationViewport::~SStationViewport()
+{
+}
 
 void SStationViewport::Construct(const FArguments& InArgs)
 {
@@ -34,85 +31,28 @@ void SStationViewport::Construct(const FArguments& InArgs)
 	
 	SelectedModuleIndex = INDEX_NONE;
 
-	ChildSlot
-	[
-		CreateViewportContent()
-	];
+	// Create preview scene for rendering
+	PreviewScene = MakeShared<FPreviewScene>(FPreviewScene::ConstructionValues());
+
+	// Call parent Construct to set up the viewport
+	SEditorViewport::Construct(SEditorViewport::FArguments());
 }
 
-TSharedRef<SWidget> SStationViewport::CreateViewportContent()
+TSharedRef<FEditorViewportClient> SStationViewport::MakeEditorViewportClient()
 {
-	return SNew(SBorder)
-		.BorderImage(FAppStyle::GetBrush("ToolPanel.DarkGroupBorder"))
-		.Padding(10.0f)
-		[
-			SNew(SVerticalBox)
+	// Create viewport client for 3D rendering
+	ViewportClient = MakeShared<FStationViewportClient>(PreviewScene.Get(), SharedThis(this));
+	
+	// Set the station design to visualize
+	ViewportClient->SetStationDesign(&GetActiveDesign());
+	
+	return ViewportClient.ToSharedRef();
+}
 
-			// Viewport header
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(0.0f, 0.0f, 0.0f, 10.0f)
-			[
-				SNew(STextBlock)
-				.Text(LOCTEXT("ViewportTitle", "3D Station Viewport"))
-				.Font(FAppStyle::GetFontStyle("BoldFont"))
-			]
-
-			// Viewport content area
-			+ SVerticalBox::Slot()
-			.FillHeight(1.0f)
-			[
-				SNew(SBorder)
-				.BorderImage(FAppStyle::GetBrush("ToolPanel.GroupBorder"))
-				.Padding(20.0f)
-				[
-					SNew(SBox)
-					.HAlign(HAlign_Center)
-					.VAlign(VAlign_Center)
-					[
-						SNew(SVerticalBox)
-
-						// Main viewport info
-						+ SVerticalBox::Slot()
-						.AutoHeight()
-						[
-							SNew(STextBlock)
-							.Text(LOCTEXT("ViewportPlaceholder", "3D Viewport Visualization"))
-							.Justification(ETextJustify::Center)
-							.Font(FAppStyle::GetFontStyle("LargeFont"))
-						]
-
-						// Instructions
-						+ SVerticalBox::Slot()
-						.AutoHeight()
-						.Padding(0.0f, 10.0f, 0.0f, 0.0f)
-						[
-							SNew(STextBlock)
-							.Text(LOCTEXT("ViewportInstructions", 
-								"Drag modules from the palette to place them here.\n"
-								"Click to select | Right-click for options\n"
-								"Camera: WASD to move | RMB to rotate"))
-							.Justification(ETextJustify::Center)
-							.AutoWrapText(true)
-						]
-
-						// Module count
-						+ SVerticalBox::Slot()
-						.AutoHeight()
-						.Padding(0.0f, 10.0f, 0.0f, 0.0f)
-						[
-							SNew(STextBlock)
-							.Text_Lambda([this]() {
-								return FText::FromString(FString::Printf(
-									TEXT("Modules Placed: %d"),
-									GetActiveDesign().Modules.Num()));
-							})
-							.Justification(ETextJustify::Center)
-						]
-					]
-				]
-			]
-		];
+TSharedPtr<SWidget> SStationViewport::MakeViewportToolbar()
+{
+	// Return nullptr for now - can add toolbar later with view options
+	return nullptr;
 }
 
 void SStationViewport::AddModule(const FModuleInfo& ModuleInfo, const FTransform& Transform)
@@ -125,6 +65,9 @@ void SStationViewport::AddModule(const FModuleInfo& ModuleInfo, const FTransform
 
 	GetActiveDesign().Modules.Add(NewPlacement);
 
+	// Refresh the viewport to show the new module
+	RefreshViewport();
+
 	UE_LOG(LogTemp, Log, TEXT("Added module: %s at location %s"),
 		*ModuleInfo.Name, *Transform.GetLocation().ToString());
 }
@@ -135,6 +78,7 @@ void SStationViewport::RemoveSelectedModule()
 	{
 		GetActiveDesign().Modules.RemoveAt(SelectedModuleIndex);
 		SelectedModuleIndex = INDEX_NONE;
+		RefreshViewport();
 		UE_LOG(LogTemp, Log, TEXT("Removed selected module"));
 	}
 }
@@ -143,6 +87,7 @@ void SStationViewport::ClearModules()
 {
 	GetActiveDesign().Modules.Empty();
 	SelectedModuleIndex = INDEX_NONE;
+	RefreshViewport();
 	UE_LOG(LogTemp, Log, TEXT("Cleared all modules"));
 }
 
@@ -157,6 +102,17 @@ void SStationViewport::SetCurrentDesign(const FStationDesign& Design)
 		InternalDesign = Design;
 	}
 	SelectedModuleIndex = INDEX_NONE;
+	RefreshViewport();
+}
+
+void SStationViewport::RefreshViewport()
+{
+	// Update viewport client with current design
+	if (ViewportClient.IsValid())
+	{
+		ViewportClient->SetStationDesign(&GetActiveDesign());
+		ViewportClient->Invalidate();
+	}
 }
 
 FReply SStationViewport::OnDragOver(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent)
@@ -170,9 +126,40 @@ FReply SStationViewport::OnDrop(const FGeometry& MyGeometry, const FDragDropEven
 	TSharedPtr<FModuleDragDropOp> ModuleDragOp = DragDropEvent.GetOperationAs<FModuleDragDropOp>();
 	if (ModuleDragOp.IsValid() && ModuleDragOp->ModuleInfo.IsValid())
 	{
-		// Calculate drop position
+		// Calculate drop position in 3D space
 		FVector2D LocalPos = MyGeometry.AbsoluteToLocal(DragDropEvent.GetScreenSpacePosition());
-		FVector DropLocation(LocalPos.X * ScreenToWorldScale, LocalPos.Y * ScreenToWorldScale, 0.0f);
+		
+		// Default drop at origin if viewport client not ready
+		FVector DropLocation(0.0f, 0.0f, 0.0f);
+		
+		if (ViewportClient.IsValid() && ViewportClient->Viewport)
+		{
+			// Project screen position to 3D world space at Z=0 plane
+			FSceneViewFamilyContext ViewFamily(FSceneViewFamily::ConstructionValues(
+				ViewportClient->Viewport,
+				ViewportClient->GetScene(),
+				ViewportClient->EngineShowFlags)
+				.SetRealtimeUpdate(true));
+			
+			FSceneView* View = ViewportClient->CalcSceneView(&ViewFamily);
+			if (View)
+			{
+				FVector WorldOrigin, WorldDirection;
+				View->DeprojectFVector2D(LocalPos, WorldOrigin, WorldDirection);
+				
+				// Intersect with Z=0 plane
+				float IntersectT = -WorldOrigin.Z / WorldDirection.Z;
+				if (IntersectT > 0)
+				{
+					DropLocation = WorldOrigin + WorldDirection * IntersectT;
+				}
+			}
+		}
+		else
+		{
+			// Fallback: Simple 2D to 3D conversion
+			DropLocation = FVector(LocalPos.X * ScreenToWorldScale, LocalPos.Y * ScreenToWorldScale, 0.0f);
+		}
 		
 		FTransform DropTransform;
 		DropTransform.SetLocation(DropLocation);
