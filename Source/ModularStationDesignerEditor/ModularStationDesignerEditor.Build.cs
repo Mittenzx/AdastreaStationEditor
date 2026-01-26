@@ -13,7 +13,8 @@ public class ModularStationDesignerEditor : ModuleRules
 			"Core",
 			"CoreUObject",
 			"Engine",
-			"ModularStationDesigner"
+			"ModularStationDesigner",
+			"Adastrea"  // Required compile-time dependency
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[]
@@ -35,15 +36,6 @@ public class ModularStationDesignerEditor : ModuleRules
 			"Kismet",
 			"KismetCompiler",
 			"BlueprintGraph"
-		});
-
-		// Optional dependency on Adastrea module for full integration
-		// The plugin detects Adastrea at compile time via __has_include
-		// When available: inheritance-based discovery, ASpaceStation Blueprints
-		// When absent: name-based discovery, AActor Blueprints (fallback mode)
-		DynamicallyLoadedModuleNames.AddRange(new string[]
-		{
-			"Adastrea"
 		});
 	}
 }

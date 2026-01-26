@@ -19,7 +19,7 @@ bool FStationFileHelper::SaveStationToFile(const FStationDesign& Design, const F
 	{
 		// Pretty print with indentation
 		TSharedPtr<FJsonObject> JsonObject;
-		if (!FJsonObjectConverter::UStructToJsonObject(Design, JsonObject) || !JsonObject.IsValid() || JsonObject->Values.Num() == 0)
+		if (!FJsonObjectConverter::UStructToJsonObject<FStationDesign>(Design, JsonObject) || !JsonObject.IsValid() || JsonObject->Values.Num() == 0)
 		{
 			UE_LOG(LogTemp, Error, TEXT("Failed to serialize station design to JSON (pretty print)"));
 			return false;

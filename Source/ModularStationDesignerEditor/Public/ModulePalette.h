@@ -7,7 +7,7 @@
 #include "ModuleDiscovery.h"
 
 class SSearchBox;
-class SListView;
+template <typename ItemType> class SListView;
 
 /**
  * Module Palette Widget - displays available modules for placement
