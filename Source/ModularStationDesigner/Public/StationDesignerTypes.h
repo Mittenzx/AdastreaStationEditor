@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 
 // Include Adastrea types - required for compilation
+// This plugin requires the Adastrea module to be installed and available
+// as it provides the core EStationModuleGroup enumeration
 #include "Stations/StationModuleTypes.h"
 
 #include "StationDesignerTypes.generated.h"

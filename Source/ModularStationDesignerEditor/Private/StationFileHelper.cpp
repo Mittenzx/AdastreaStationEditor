@@ -32,7 +32,7 @@ bool FStationFileHelper::SaveStationToFile(const FStationDesign& Design, const F
 	else
 	{
 		// Compact JSON
-		if (!FJsonObjectConverter::UStructToJsonObjectString(Design, JsonString))
+		if (!FJsonObjectConverter::UStructToJsonObjectString<FStationDesign>(Design, JsonString))
 		{
 			UE_LOG(LogTemp, Error, TEXT("Failed to serialize station design to JSON"));
 			return false;
