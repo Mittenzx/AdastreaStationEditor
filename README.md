@@ -146,6 +146,7 @@ Once installed, you can verify the plugin is working:
 - ✅ UE editor integration (tab system & Tools menu)
 
 **What's Pending:**
+- ⏳ 3D viewport real rendering (currently placeholder - needs SEditorViewport integration)
 - ⏳ Compilation testing in Unreal Engine 5.6
 - ⏳ Runtime testing in UE editor
 - ⏳ Integration testing with Adastrea assets

@@ -9,6 +9,11 @@
 
 /**
  * Station Viewport Widget - 3D visualization of station design
+ * 
+ * NOTE: This is currently a PLACEHOLDER implementation showing text-based UI.
+ * For full 3D rendering, this needs to be replaced with SEditorViewport and
+ * FEditorViewportClient to provide actual 3D scene rendering capabilities.
+ * See Unreal Engine's SEditorViewport documentation for implementation details.
  */
 class SStationViewport : public SCompoundWidget
 {

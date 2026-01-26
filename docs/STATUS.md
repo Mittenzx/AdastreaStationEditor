@@ -84,18 +84,18 @@
 **Phase 1: Core Functionality Implementation (Complete)**
 - [x] Module discovery system (implemented - discovers modules from Asset Registry)
 - [x] Connection point behavior (implemented - snapping logic and validation complete)
-- [x] User interface (Slate UI with Module Palette, 3D Viewport, and Properties panel)
+- [x] User interface (Slate UI with Module Palette, 3D Viewport placeholder, and Properties panel)
 - [x] Drag-and-drop functionality (implemented with FModuleDragDropOp)
-- [x] 3D viewport integration (implemented with SStationViewport)
+- [ ] 3D viewport integration (placeholder UI created with SStationViewport - needs real 3D rendering)
 
 ### ✅ Phase 1: Implementation Complete
 
 **Phase 1 Core Functionality (Implementation Complete)**
 - [x] Module discovery system (implemented - discovers modules from Asset Registry)
 - [x] Connection point behavior (implemented - snapping logic and validation complete)
-- [x] User interface (Slate UI with Module Palette, 3D Viewport, and Properties panel)
+- [x] User interface (Slate UI with Module Palette, 3D Viewport placeholder, and Properties panel)
 - [x] Drag-and-drop functionality (implemented with FModuleDragDropOp)
-- [x] 3D viewport integration (implemented with SStationViewport)
+- [ ] 3D viewport integration (placeholder UI created with SStationViewport - needs real 3D rendering)
 
 ### 🔜 Testing & Verification
 
@@ -178,7 +178,7 @@ AdastreaStationEditor/
 - ✅ Module discovery from Adastrea project (implemented)
 - ✅ Connection point system with validation (complete)
 - ✅ Drag-and-drop module placement (implemented)
-- ✅ 3D visualization workspace (implemented)
+- ⏳ 3D visualization workspace (placeholder created - needs real 3D rendering integration)
 - ✅ Complete UI framework (implemented with three-panel layout)
 
 ### Phase 2: Export & Polish (Planned)
@@ -249,7 +249,7 @@ The plugin has completed **Phase 1 development**. Available now (v0.5.0-beta):
 - ✅ Station Designer UI with three-panel layout
 - ✅ Module Palette with search and filtering
 - ✅ Drag-and-drop module placement
-- ✅ 3D viewport for station visualization
+- ⏳ 3D viewport placeholder (needs real 3D rendering implementation)
 - ✅ Connection point system with validation
 
 Coming soon:
@@ -269,7 +269,7 @@ Coming soon:
 - ✅ Connection point behavior with snapping logic complete
 - ✅ Complete Slate UI for Station Designer window
   - Module Palette with search and category filtering
-  - 3D Viewport for station visualization
+  - 3D Viewport placeholder (text-based, needs real 3D rendering)
   - Properties panel (placeholder)
   - Toolbar with New, Load, Save, Export, Validate
   - Dynamic status bar
@@ -277,10 +277,11 @@ Coming soon:
   - FModuleDragDropOp class for drag operations
   - Drag from palette, drop in viewport
   - Visual feedback during operations
-- ✅ 3D viewport integration complete
-  - Module placement tracking
-  - Station design management
-  - Drag-drop handling
+- ⏳ 3D viewport integration (placeholder stage)
+  - Module placement tracking (data only, no visual rendering)
+  - Station design management (data only)
+  - Drag-drop handling (functional but no 3D preview)
+  - Real 3D rendering with SEditorViewport not yet implemented
 
 **Files Added/Modified**:
 - Created: SModulePalette (header + implementation)

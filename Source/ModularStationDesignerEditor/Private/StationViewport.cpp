@@ -1,5 +1,17 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+// NOTE: This is a PLACEHOLDER implementation of the 3D viewport.
+// It currently displays text-based instructions and module counts,
+// but does NOT render actual 3D geometry.
+//
+// To implement real 3D visualization:
+// 1. Replace SStationViewport to inherit from SEditorViewport
+// 2. Create FStationViewportClient derived from FEditorViewportClient
+// 3. Add UnrealEd module dependency in .Build.cs
+// 4. Implement OnDraw to render modules, connections, and visual indicators
+// 5. Add camera controls (orbit, pan, zoom)
+// 6. Integrate with FVisualizationSystem for power flow, connections, etc.
+
 #include "StationViewport.h"
 #include "ModuleDragDropOp.h"
 #include "Widgets/Layout/SBorder.h"
