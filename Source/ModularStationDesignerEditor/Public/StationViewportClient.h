@@ -46,6 +46,12 @@ private:
 	/** Draw grid overlay */
 	void DrawGrid(const FSceneView* View, FPrimitiveDrawInterface* PDI);
 
+	/** Helper function to draw orientation axes for a module */
+	void DrawModuleAxes(FPrimitiveDrawInterface* PDI, const FVector& Location, const FTransform& Transform, float AxisLength);
+
 	/** Animation time for effects */
 	float AnimationTime;
+
+	/** Cached number of grid lines (computed once) */
+	int32 CachedGridLines;
 };

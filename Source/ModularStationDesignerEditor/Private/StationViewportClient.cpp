@@ -14,6 +14,7 @@ FStationViewportClient::FStationViewportClient(FPreviewScene* InPreviewScene, co
 	: FEditorViewportClient(nullptr, InPreviewScene, InEditorViewportWidget)
 	, CurrentDesign(nullptr)
 	, AnimationTime(0.0f)
+	, CachedGridLines(0)
 {
 	// Set up viewport for 3D visualization
 	SetViewMode(VMI_Lit);
@@ -29,6 +30,11 @@ FStationViewportClient::FStationViewportClient(FPreviewScene* InPreviewScene, co
 	bDrawAxes = true;
 	EngineShowFlags.SetGrid(true);
 	EngineShowFlags.SetSnap(false);
+
+	// Pre-calculate grid lines (GridSize=10000, GridSpacing=100)
+	const float GridSize = 10000.0f;
+	const float GridSpacing = 100.0f;
+	CachedGridLines = FMath::CeilToInt(GridSize / GridSpacing);
 }
 
 FStationViewportClient::~FStationViewportClient()
@@ -142,16 +148,22 @@ void FStationViewportClient::DrawModules(const FSceneView* View, FPrimitiveDrawI
 		FBox Box(Location - BoxExtent, Location + BoxExtent);
 		DrawWireBox(PDI, Box, ModuleColor, SDPG_World);
 		
-		// Draw orientation indicator
-		float AxisLength = 75.0f;
-		FVector XAxis = ModuleTransform.TransformVector(FVector::ForwardVector) * AxisLength;
-		FVector YAxis = ModuleTransform.TransformVector(FVector::RightVector) * AxisLength;
-		FVector ZAxis = ModuleTransform.TransformVector(FVector::UpVector) * AxisLength;
-		
-		PDI->DrawLine(Location, Location + XAxis, FLinearColor::Red, SDPG_World, 2.0f);
-		PDI->DrawLine(Location, Location + YAxis, FLinearColor::Green, SDPG_World, 2.0f);
-		PDI->DrawLine(Location, Location + ZAxis, FLinearColor::Blue, SDPG_World, 2.0f);
+		// Draw orientation indicator using helper function
+		DrawModuleAxes(PDI, Location, ModuleTransform, 75.0f);
 	}
+}
+
+void FStationViewportClient::DrawModuleAxes(FPrimitiveDrawInterface* PDI, const FVector& Location, const FTransform& Transform, float AxisLength)
+{
+	// Calculate axis directions
+	FVector XAxis = Transform.TransformVector(FVector::ForwardVector) * AxisLength;
+	FVector YAxis = Transform.TransformVector(FVector::RightVector) * AxisLength;
+	FVector ZAxis = Transform.TransformVector(FVector::UpVector) * AxisLength;
+	
+	// Draw orientation axes
+	PDI->DrawLine(Location, Location + XAxis, FLinearColor::Red, SDPG_World, 2.0f);
+	PDI->DrawLine(Location, Location + YAxis, FLinearColor::Green, SDPG_World, 2.0f);
+	PDI->DrawLine(Location, Location + ZAxis, FLinearColor::Blue, SDPG_World, 2.0f);
 }
 
 void FStationViewportClient::DrawConnectionWires(const FSceneView* View, FPrimitiveDrawInterface* PDI)
@@ -207,7 +219,8 @@ void FStationViewportClient::DrawGrid(const FSceneView* View, FPrimitiveDrawInte
 	const float GridSpacing = 100.0f;
 	const FLinearColor GridColor = FLinearColor(0.3f, 0.3f, 0.3f, 0.5f);
 	
-	int32 NumLines = FMath::CeilToInt(GridSize / GridSpacing);
+	// Use cached grid lines value (computed once in constructor)
+	int32 NumLines = CachedGridLines;
 	
 	for (int32 i = -NumLines; i <= NumLines; ++i)
 	{
