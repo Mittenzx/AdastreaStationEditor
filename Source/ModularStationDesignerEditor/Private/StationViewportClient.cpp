@@ -9,10 +9,15 @@
 #include "CanvasTypes.h"
 #include "Engine/Canvas.h"
 #include "SceneManagement.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
+#include "Engine/Blueprint.h"
+#include "UObject/ConstructorHelpers.h"
 
 FStationViewportClient::FStationViewportClient(FPreviewScene* InPreviewScene, const TWeakPtr<SEditorViewport>& InEditorViewportWidget)
 	: FEditorViewportClient(nullptr, InPreviewScene, InEditorViewportWidget)
 	, CurrentDesign(nullptr)
+	, PreviewScene(InPreviewScene)
 	, AnimationTime(0.0f)
 	, CachedGridLines(0)
 {
@@ -39,6 +44,8 @@ FStationViewportClient::FStationViewportClient(FPreviewScene* InPreviewScene, co
 
 FStationViewportClient::~FStationViewportClient()
 {
+	// Clean up all preview components
+	ClearPreviewComponents();
 }
 
 void FStationViewportClient::Tick(float DeltaSeconds)
@@ -104,6 +111,9 @@ void FStationViewportClient::DrawCanvas(FViewport& InViewport, FSceneView& View,
 void FStationViewportClient::SetStationDesign(FStationDesign* InDesign)
 {
 	CurrentDesign = InDesign;
+	
+	// Update preview components to match new design
+	UpdatePreviewComponents();
 }
 
 void FStationViewportClient::DrawModules(const FSceneView* View, FPrimitiveDrawInterface* PDI)
@@ -113,43 +123,52 @@ void FStationViewportClient::DrawModules(const FSceneView* View, FPrimitiveDrawI
 		return;
 	}
 
-	// Draw each module as a box with color coding
+	// Draw each module - either the loaded mesh (via preview components) or a wireframe fallback
 	for (const FModulePlacement& Module : CurrentDesign->Modules)
 	{
+		// Check if we have a preview component with a mesh for this module
+		UStaticMeshComponent* Component = PreviewComponents.FindRef(Module.ModuleID);
+		bool bHasMesh = Component && Component->GetStaticMesh();
+		
+		if (!bHasMesh)
+		{
+			// Draw wireframe fallback if mesh couldn't be loaded
+			FVector Location = Module.Transform.GetLocation();
+			FRotator Rotation = Module.Transform.Rotator();
+			
+			// Default module size (can be customized later based on module type)
+			FVector BoxExtent(100.0f, 100.0f, 50.0f);
+			
+			// Get color based on module name (simplified)
+			FLinearColor ModuleColor = FLinearColor::White;
+			FString ModuleName = Module.ModuleBlueprintPath.GetAssetName();
+			
+			if (ModuleName.Contains(TEXT("Docking")))
+			{
+				ModuleColor = FVisualizationSystem::GetColorForModuleGroup(EStationModuleGroup::Docking);
+			}
+			else if (ModuleName.Contains(TEXT("Power")) || ModuleName.Contains(TEXT("Reactor")))
+			{
+				ModuleColor = FVisualizationSystem::GetColorForModuleGroup(EStationModuleGroup::Power);
+			}
+			else if (ModuleName.Contains(TEXT("Storage")) || ModuleName.Contains(TEXT("Cargo")))
+			{
+				ModuleColor = FVisualizationSystem::GetColorForModuleGroup(EStationModuleGroup::Storage);
+			}
+			else if (ModuleName.Contains(TEXT("Habitat")))
+			{
+				ModuleColor = FVisualizationSystem::GetColorForModuleGroup(EStationModuleGroup::Habitation);
+			}
+			
+			// Draw the module as a wireframe box
+			FTransform ModuleTransform = Module.Transform;
+			FBox Box(Location - BoxExtent, Location + BoxExtent);
+			DrawWireBox(PDI, Box, ModuleColor, SDPG_World);
+		}
+		
+		// Always draw orientation indicator
 		FVector Location = Module.Transform.GetLocation();
-		FRotator Rotation = Module.Transform.Rotator();
-		
-		// Default module size (can be customized later based on module type)
-		FVector BoxExtent(100.0f, 100.0f, 50.0f);
-		
-		// Get color based on module name (simplified)
-		FLinearColor ModuleColor = FLinearColor::White;
-		FString ModuleName = Module.ModuleBlueprintPath.GetAssetName();
-		
-		if (ModuleName.Contains(TEXT("Docking")))
-		{
-			ModuleColor = FVisualizationSystem::GetColorForModuleGroup(EStationModuleGroup::Docking);
-		}
-		else if (ModuleName.Contains(TEXT("Power")) || ModuleName.Contains(TEXT("Reactor")))
-		{
-			ModuleColor = FVisualizationSystem::GetColorForModuleGroup(EStationModuleGroup::Power);
-		}
-		else if (ModuleName.Contains(TEXT("Storage")) || ModuleName.Contains(TEXT("Cargo")))
-		{
-			ModuleColor = FVisualizationSystem::GetColorForModuleGroup(EStationModuleGroup::Storage);
-		}
-		else if (ModuleName.Contains(TEXT("Habitat")))
-		{
-			ModuleColor = FVisualizationSystem::GetColorForModuleGroup(EStationModuleGroup::Habitation);
-		}
-		
-		// Draw the module as a wireframe box
-		FTransform ModuleTransform = Module.Transform;
-		FBox Box(Location - BoxExtent, Location + BoxExtent);
-		DrawWireBox(PDI, Box, ModuleColor, SDPG_World);
-		
-		// Draw orientation indicator using helper function
-		DrawModuleAxes(PDI, Location, ModuleTransform, 75.0f);
+		DrawModuleAxes(PDI, Location, Module.Transform, 75.0f);
 	}
 }
 
@@ -246,4 +265,110 @@ void FStationViewportClient::DrawGrid(const FSceneView* View, FPrimitiveDrawInte
 	// Draw thicker center lines
 	PDI->DrawLine(FVector(-GridSize, 0, 0), FVector(GridSize, 0, 0), FLinearColor::Green, SDPG_World, 2.0f);
 	PDI->DrawLine(FVector(0, -GridSize, 0), FVector(0, GridSize, 0), FLinearColor::Red, SDPG_World, 2.0f);
+}
+
+void FStationViewportClient::UpdatePreviewComponents()
+{
+	if (!PreviewScene || !CurrentDesign)
+	{
+		ClearPreviewComponents();
+		return;
+	}
+
+	// Track which modules exist in the current design
+	TSet<FString> CurrentModuleIDs;
+	for (const FModulePlacement& Module : CurrentDesign->Modules)
+	{
+		CurrentModuleIDs.Add(Module.ModuleID);
+	}
+
+	// Remove components for modules that no longer exist
+	TArray<FString> ModulesToRemove;
+	for (const auto& Pair : PreviewComponents)
+	{
+		if (!CurrentModuleIDs.Contains(Pair.Key))
+		{
+			ModulesToRemove.Add(Pair.Key);
+		}
+	}
+
+	for (const FString& ModuleID : ModulesToRemove)
+	{
+		if (UStaticMeshComponent* Component = PreviewComponents[ModuleID])
+		{
+			PreviewScene->RemoveComponent(Component);
+		}
+		PreviewComponents.Remove(ModuleID);
+	}
+
+	// Add or update components for current modules
+	for (const FModulePlacement& Module : CurrentDesign->Modules)
+	{
+		UStaticMeshComponent* Component = PreviewComponents.FindRef(Module.ModuleID);
+		
+		if (!Component)
+		{
+			// Create new component for this module
+			Component = NewObject<UStaticMeshComponent>();
+			
+			if (Component)
+			{
+				// Try to load the blueprint and extract the static mesh
+				UClass* BlueprintClass = Module.ModuleBlueprintPath.TryLoadClass<UObject>();
+				if (BlueprintClass)
+				{
+					// Get the default object to inspect components
+					UObject* DefaultObject = BlueprintClass->GetDefaultObject();
+					if (DefaultObject)
+					{
+						// Try to find a static mesh component in the blueprint
+						TArray<UStaticMeshComponent*> MeshComponents;
+						DefaultObject->GetComponents<UStaticMeshComponent>(MeshComponents);
+						
+						if (MeshComponents.Num() > 0 && MeshComponents[0]->GetStaticMesh())
+						{
+							// Copy the static mesh from the blueprint
+							Component->SetStaticMesh(MeshComponents[0]->GetStaticMesh());
+							
+							// Copy materials as well
+							for (int32 i = 0; i < MeshComponents[0]->GetNumMaterials(); ++i)
+							{
+								Component->SetMaterial(i, MeshComponents[0]->GetMaterial(i));
+							}
+						}
+					}
+				}
+				
+				// If we couldn't load a mesh, the component will remain empty and we'll draw wireframe as fallback
+				
+				// Add component to the preview scene
+				PreviewScene->AddComponent(Component, Module.Transform);
+				PreviewComponents.Add(Module.ModuleID, Component);
+			}
+		}
+		else
+		{
+			// Update existing component transform
+			Component->SetWorldTransform(Module.Transform);
+		}
+	}
+}
+
+void FStationViewportClient::ClearPreviewComponents()
+{
+	if (!PreviewScene)
+	{
+		return;
+	}
+
+	// Remove all components from the preview scene
+	for (const auto& Pair : PreviewComponents)
+	{
+		if (UStaticMeshComponent* Component = Pair.Value)
+		{
+			PreviewScene->RemoveComponent(Component);
+		}
+	}
+
+	PreviewComponents.Empty();
 }

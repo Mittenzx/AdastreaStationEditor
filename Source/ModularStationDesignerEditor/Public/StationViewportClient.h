@@ -8,6 +8,7 @@
 
 class FPreviewScene;
 class SStationViewport;
+class UStaticMeshComponent;
 
 /**
  * Viewport client for station designer 3D visualization
@@ -33,6 +34,18 @@ public:
 private:
 	/** Pointer to the station design being visualized */
 	FStationDesign* CurrentDesign;
+
+	/** Preview scene reference for spawning components */
+	FPreviewScene* PreviewScene;
+
+	/** Map of module IDs to their preview components */
+	TMap<FString, UStaticMeshComponent*> PreviewComponents;
+
+	/** Update preview components to match current design */
+	void UpdatePreviewComponents();
+
+	/** Clear all preview components */
+	void ClearPreviewComponents();
 
 	/** Draw module representations */
 	void DrawModules(const FSceneView* View, FPrimitiveDrawInterface* PDI);
