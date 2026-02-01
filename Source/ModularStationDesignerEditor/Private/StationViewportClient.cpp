@@ -309,11 +309,15 @@ void FStationViewportClient::UpdatePreviewComponents()
 		if (!Component)
 		{
 			// Create new component for this module with proper Outer for garbage collection
+			// Using GetTransientPackage() allows components to be GC'd when no longer referenced
+			// Cleanup is ensured by ClearPreviewComponents() in destructor and SetStationDesign()
 			Component = NewObject<UStaticMeshComponent>(GetTransientPackage());
 			
 			if (Component)
 			{
 				// Try to load the blueprint and extract the static mesh
+				// Note: Synchronous loading is used for simplicity in this initial implementation
+				// For production use with many modules, consider async loading with callbacks
 				UClass* BlueprintClass = Module.ModuleBlueprintPath.TryLoadClass<UObject>();
 				if (BlueprintClass)
 				{
