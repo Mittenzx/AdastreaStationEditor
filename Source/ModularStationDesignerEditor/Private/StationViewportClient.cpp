@@ -168,8 +168,7 @@ void FStationViewportClient::DrawModules(const FSceneView* View, FPrimitiveDrawI
 		}
 		
 		// Always draw orientation indicator
-		FVector Location = Module.Transform.GetLocation();
-		DrawModuleAxes(PDI, Location, Module.Transform, 75.0f);
+		DrawModuleAxes(PDI, Module.Transform.GetLocation(), Module.Transform, 75.0f);
 	}
 }
 
@@ -309,8 +308,8 @@ void FStationViewportClient::UpdatePreviewComponents()
 		
 		if (!Component)
 		{
-			// Create new component for this module
-			Component = NewObject<UStaticMeshComponent>();
+			// Create new component for this module with proper Outer for garbage collection
+			Component = NewObject<UStaticMeshComponent>(GetTransientPackage());
 			
 			if (Component)
 			{
@@ -322,6 +321,8 @@ void FStationViewportClient::UpdatePreviewComponents()
 					if (AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject()))
 					{
 						// Try to find a static mesh component in the blueprint
+						// Note: We use the first mesh component as the primary representation
+						// This assumes the blueprint's main visual component is the first one
 						TArray<UStaticMeshComponent*> MeshComponents;
 						DefaultActor->GetComponents<UStaticMeshComponent>(MeshComponents);
 						
