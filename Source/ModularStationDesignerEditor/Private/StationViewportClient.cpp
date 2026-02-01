@@ -12,6 +12,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/Blueprint.h"
+#include "GameFramework/Actor.h"
 #include "UObject/ConstructorHelpers.h"
 
 FStationViewportClient::FStationViewportClient(FPreviewScene* InPreviewScene, const TWeakPtr<SEditorViewport>& InEditorViewportWidget)
@@ -317,13 +318,12 @@ void FStationViewportClient::UpdatePreviewComponents()
 				UClass* BlueprintClass = Module.ModuleBlueprintPath.TryLoadClass<UObject>();
 				if (BlueprintClass)
 				{
-					// Get the default object to inspect components
-					UObject* DefaultObject = BlueprintClass->GetDefaultObject();
-					if (DefaultObject)
+					// Get the Class Default Object (CDO) to inspect components
+					if (AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject()))
 					{
 						// Try to find a static mesh component in the blueprint
 						TArray<UStaticMeshComponent*> MeshComponents;
-						DefaultObject->GetComponents<UStaticMeshComponent>(MeshComponents);
+						DefaultActor->GetComponents<UStaticMeshComponent>(MeshComponents);
 						
 						if (MeshComponents.Num() > 0 && MeshComponents[0]->GetStaticMesh())
 						{
