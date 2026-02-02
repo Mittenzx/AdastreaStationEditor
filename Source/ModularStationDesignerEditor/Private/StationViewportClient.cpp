@@ -359,9 +359,16 @@ void FStationViewportClient::UpdatePreviewComponents()
 					{
 						Component->SetMaterial(i, Materials[i]);
 					}
-					
-					// Update the cached path
-					ModuleBlueprintPaths[Module.ModuleID] = Module.ModuleBlueprintPath;
+				}
+				
+				// Update the cached path (always, even if mesh load failed)
+				if (CachedPath)
+				{
+					*CachedPath = Module.ModuleBlueprintPath;
+				}
+				else
+				{
+					ModuleBlueprintPaths.Add(Module.ModuleID, Module.ModuleBlueprintPath);
 				}
 			}
 			
