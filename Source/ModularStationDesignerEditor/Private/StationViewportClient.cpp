@@ -343,8 +343,9 @@ void FStationViewportClient::UpdatePreviewComponents()
 		{
 			// Update existing component. If blueprint path changed, reload the mesh.
 			FSoftClassPath* CachedPath = ModuleBlueprintPaths.Find(Module.ModuleID);
+			bool bPathChanged = !CachedPath || *CachedPath != Module.ModuleBlueprintPath;
 			
-			if (!CachedPath || *CachedPath != Module.ModuleBlueprintPath)
+			if (bPathChanged)
 			{
 				// Blueprint path has changed, reload the mesh
 				TArray<UMaterialInterface*> Materials;
@@ -362,14 +363,7 @@ void FStationViewportClient::UpdatePreviewComponents()
 				}
 				
 				// Update the cached path (always, even if mesh load failed)
-				if (CachedPath)
-				{
-					*CachedPath = Module.ModuleBlueprintPath;
-				}
-				else
-				{
-					ModuleBlueprintPaths.Add(Module.ModuleID, Module.ModuleBlueprintPath);
-				}
+				ModuleBlueprintPaths.FindOrAdd(Module.ModuleID) = Module.ModuleBlueprintPath;
 			}
 			
 			// Always update the transform to match the module's placement.
