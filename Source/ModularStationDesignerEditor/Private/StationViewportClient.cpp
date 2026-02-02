@@ -13,7 +13,6 @@
 #include "Engine/StaticMesh.h"
 #include "Engine/Blueprint.h"
 #include "GameFramework/Actor.h"
-#include "UObject/ConstructorHelpers.h"
 
 FStationViewportClient::FStationViewportClient(FPreviewScene* InPreviewScene, const TWeakPtr<SEditorViewport>& InEditorViewportWidget)
 	: FEditorViewportClient(nullptr, InPreviewScene, InEditorViewportWidget)
@@ -135,7 +134,6 @@ void FStationViewportClient::DrawModules(const FSceneView* View, FPrimitiveDrawI
 		{
 			// Draw wireframe fallback if mesh couldn't be loaded
 			FVector Location = Module.Transform.GetLocation();
-			FRotator Rotation = Module.Transform.Rotator();
 			
 			// Default module size (can be customized later based on module type)
 			FVector BoxExtent(100.0f, 100.0f, 50.0f);
@@ -162,7 +160,6 @@ void FStationViewportClient::DrawModules(const FSceneView* View, FPrimitiveDrawI
 			}
 			
 			// Draw the module as a wireframe box
-			FTransform ModuleTransform = Module.Transform;
 			FBox Box(Location - BoxExtent, Location + BoxExtent);
 			DrawWireBox(PDI, Box, ModuleColor, SDPG_World);
 		}
@@ -299,6 +296,7 @@ void FStationViewportClient::UpdatePreviewComponents()
 			PreviewScene->RemoveComponent(Component);
 		}
 		PreviewComponents.Remove(ModuleID);
+		ModuleBlueprintPaths.Remove(ModuleID);
 	}
 
 	// Add or update components for current modules
@@ -318,42 +316,57 @@ void FStationViewportClient::UpdatePreviewComponents()
 				// Try to load the blueprint and extract the static mesh
 				// Note: Synchronous loading is used for simplicity in this initial implementation
 				// For production use with many modules, consider async loading with callbacks
-				UClass* BlueprintClass = Module.ModuleBlueprintPath.TryLoadClass<UObject>();
-				if (BlueprintClass)
+				TArray<UMaterialInterface*> Materials;
+				UStaticMesh* Mesh = LoadMeshFromBlueprintPath(Module.ModuleBlueprintPath, Materials);
+				
+				if (Mesh)
 				{
-					// Get the Class Default Object (CDO) to inspect components
-					if (AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject()))
+					Component->SetStaticMesh(Mesh);
+					
+					// Copy materials
+					for (int32 i = 0; i < Materials.Num(); ++i)
 					{
-						// Try to find a static mesh component in the blueprint
-						// Note: We use the first mesh component as the primary representation
-						// This assumes the blueprint's main visual component is the first one
-						TArray<UStaticMeshComponent*> MeshComponents;
-						DefaultActor->GetComponents<UStaticMeshComponent>(MeshComponents);
-						
-						if (MeshComponents.Num() > 0 && MeshComponents[0]->GetStaticMesh())
-						{
-							// Copy the static mesh from the blueprint
-							Component->SetStaticMesh(MeshComponents[0]->GetStaticMesh());
-							
-							// Copy materials as well
-							for (int32 i = 0; i < MeshComponents[0]->GetNumMaterials(); ++i)
-							{
-								Component->SetMaterial(i, MeshComponents[0]->GetMaterial(i));
-							}
-						}
+						Component->SetMaterial(i, Materials[i]);
 					}
 				}
 				
-				// If we couldn't load a mesh, the component will remain empty and we'll draw wireframe as fallback
-				
-				// Add component to the preview scene
-				PreviewScene->AddComponent(Component, Module.Transform);
-				PreviewComponents.Add(Module.ModuleID, Component);
+				// Only add the component to the preview scene if it has a valid static mesh
+				if (Component->GetStaticMesh())
+				{
+					PreviewScene->AddComponent(Component, Module.Transform);
+					PreviewComponents.Add(Module.ModuleID, Component);
+					ModuleBlueprintPaths.Add(Module.ModuleID, Module.ModuleBlueprintPath);
+				}
 			}
 		}
 		else
 		{
-			// Update existing component transform
+			// Update existing component when the module already has a preview component.
+			// If the blueprint path (and thus the mesh) has changed, reload and update the mesh.
+			FSoftClassPath* CachedPath = ModuleBlueprintPaths.Find(Module.ModuleID);
+			
+			if (!CachedPath || *CachedPath != Module.ModuleBlueprintPath)
+			{
+				// Blueprint path has changed, reload the mesh
+				TArray<UMaterialInterface*> Materials;
+				UStaticMesh* NewMesh = LoadMeshFromBlueprintPath(Module.ModuleBlueprintPath, Materials);
+				
+				if (NewMesh && Component->GetStaticMesh() != NewMesh)
+				{
+					Component->SetStaticMesh(NewMesh);
+					
+					// Update materials as well
+					for (int32 i = 0; i < Materials.Num(); ++i)
+					{
+						Component->SetMaterial(i, Materials[i]);
+					}
+					
+					// Update the cached path
+					ModuleBlueprintPaths.Add(Module.ModuleID, Module.ModuleBlueprintPath);
+				}
+			}
+			
+			// Always update the transform to match the module's placement.
 			Component->SetWorldTransform(Module.Transform);
 		}
 	}
@@ -376,4 +389,46 @@ void FStationViewportClient::ClearPreviewComponents()
 	}
 
 	PreviewComponents.Empty();
+	ModuleBlueprintPaths.Empty();
+}
+
+UStaticMesh* FStationViewportClient::LoadMeshFromBlueprintPath(const FSoftClassPath& BlueprintPath, TArray<UMaterialInterface*>& OutMaterials)
+{
+	OutMaterials.Empty();
+	
+	if (BlueprintPath.IsNull())
+	{
+		return nullptr;
+	}
+	
+	// Try to load the blueprint and extract the static mesh
+	UClass* BlueprintClass = BlueprintPath.TryLoadClass<UObject>();
+	if (!BlueprintClass)
+	{
+		return nullptr;
+	}
+	
+	// Get the Class Default Object (CDO) to inspect components
+	AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
+	if (!DefaultActor)
+	{
+		return nullptr;
+	}
+	
+	// Try to find a static mesh component in the blueprint
+	TArray<UStaticMeshComponent*> MeshComponents;
+	DefaultActor->GetComponents<UStaticMeshComponent>(MeshComponents);
+	
+	if (MeshComponents.Num() > 0 && MeshComponents[0]->GetStaticMesh())
+	{
+		// Copy materials
+		for (int32 i = 0; i < MeshComponents[0]->GetNumMaterials(); ++i)
+		{
+			OutMaterials.Add(MeshComponents[0]->GetMaterial(i));
+		}
+		
+		return MeshComponents[0]->GetStaticMesh();
+	}
+	
+	return nullptr;
 }

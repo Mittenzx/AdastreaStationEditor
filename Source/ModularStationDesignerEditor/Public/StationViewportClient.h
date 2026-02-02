@@ -41,11 +41,17 @@ private:
 	/** Map of module IDs to their preview components */
 	TMap<FString, UStaticMeshComponent*> PreviewComponents;
 
+	/** Map of module IDs to their blueprint paths (for detecting changes) */
+	TMap<FString, FSoftClassPath> ModuleBlueprintPaths;
+
 	/** Update preview components to match current design */
 	void UpdatePreviewComponents();
 
 	/** Clear all preview components */
 	void ClearPreviewComponents();
+
+	/** Helper function to load mesh from blueprint path */
+	UStaticMesh* LoadMeshFromBlueprintPath(const FSoftClassPath& BlueprintPath, TArray<UMaterialInterface*>& OutMaterials);
 
 	/** Draw module representations */
 	void DrawModules(const FSceneView* View, FPrimitiveDrawInterface* PDI);
