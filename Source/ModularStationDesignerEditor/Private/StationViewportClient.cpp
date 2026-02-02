@@ -9,10 +9,15 @@
 #include "CanvasTypes.h"
 #include "Engine/Canvas.h"
 #include "SceneManagement.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
+#include "Engine/Blueprint.h"
+#include "GameFramework/Actor.h"
 
 FStationViewportClient::FStationViewportClient(FPreviewScene* InPreviewScene, const TWeakPtr<SEditorViewport>& InEditorViewportWidget)
 	: FEditorViewportClient(nullptr, InPreviewScene, InEditorViewportWidget)
 	, CurrentDesign(nullptr)
+	, PreviewScene(InPreviewScene)
 	, AnimationTime(0.0f)
 	, CachedGridLines(0)
 {
@@ -39,6 +44,8 @@ FStationViewportClient::FStationViewportClient(FPreviewScene* InPreviewScene, co
 
 FStationViewportClient::~FStationViewportClient()
 {
+	// Clean up all preview components
+	ClearPreviewComponents();
 }
 
 void FStationViewportClient::Tick(float DeltaSeconds)
@@ -104,6 +111,9 @@ void FStationViewportClient::DrawCanvas(FViewport& InViewport, FSceneView& View,
 void FStationViewportClient::SetStationDesign(FStationDesign* InDesign)
 {
 	CurrentDesign = InDesign;
+	
+	// Update preview components to match new design
+	UpdatePreviewComponents();
 }
 
 void FStationViewportClient::DrawModules(const FSceneView* View, FPrimitiveDrawInterface* PDI)
@@ -113,43 +123,49 @@ void FStationViewportClient::DrawModules(const FSceneView* View, FPrimitiveDrawI
 		return;
 	}
 
-	// Draw each module as a box with color coding
+	// Draw each module - either the loaded mesh (via preview components) or a wireframe fallback
 	for (const FModulePlacement& Module : CurrentDesign->Modules)
 	{
-		FVector Location = Module.Transform.GetLocation();
-		FRotator Rotation = Module.Transform.Rotator();
+		// Check if we have a preview component with a mesh for this module
+		UStaticMeshComponent* Component = PreviewComponents.FindRef(Module.ModuleID);
+		bool bHasMesh = Component && Component->GetStaticMesh();
 		
-		// Default module size (can be customized later based on module type)
-		FVector BoxExtent(100.0f, 100.0f, 50.0f);
-		
-		// Get color based on module name (simplified)
-		FLinearColor ModuleColor = FLinearColor::White;
-		FString ModuleName = Module.ModuleBlueprintPath.GetAssetName();
-		
-		if (ModuleName.Contains(TEXT("Docking")))
+		if (!bHasMesh)
 		{
-			ModuleColor = FVisualizationSystem::GetColorForModuleGroup(EStationModuleGroup::Docking);
-		}
-		else if (ModuleName.Contains(TEXT("Power")) || ModuleName.Contains(TEXT("Reactor")))
-		{
-			ModuleColor = FVisualizationSystem::GetColorForModuleGroup(EStationModuleGroup::Power);
-		}
-		else if (ModuleName.Contains(TEXT("Storage")) || ModuleName.Contains(TEXT("Cargo")))
-		{
-			ModuleColor = FVisualizationSystem::GetColorForModuleGroup(EStationModuleGroup::Storage);
-		}
-		else if (ModuleName.Contains(TEXT("Habitat")))
-		{
-			ModuleColor = FVisualizationSystem::GetColorForModuleGroup(EStationModuleGroup::Habitation);
+			// Draw wireframe fallback if mesh couldn't be loaded
+			FVector Location = Module.Transform.GetLocation();
+			
+			// Default module size (can be customized later based on module type)
+			FVector BoxExtent(100.0f, 100.0f, 50.0f);
+			
+			// Get color based on module name (simplified)
+			FLinearColor ModuleColor = FLinearColor::White;
+			FString ModuleName = Module.ModuleBlueprintPath.GetAssetName();
+			
+			if (ModuleName.Contains(TEXT("Docking")))
+			{
+				ModuleColor = FVisualizationSystem::GetColorForModuleGroup(EStationModuleGroup::Docking);
+			}
+			else if (ModuleName.Contains(TEXT("Power")) || ModuleName.Contains(TEXT("Reactor")))
+			{
+				ModuleColor = FVisualizationSystem::GetColorForModuleGroup(EStationModuleGroup::Power);
+			}
+			else if (ModuleName.Contains(TEXT("Storage")) || ModuleName.Contains(TEXT("Cargo")))
+			{
+				ModuleColor = FVisualizationSystem::GetColorForModuleGroup(EStationModuleGroup::Storage);
+			}
+			else if (ModuleName.Contains(TEXT("Habitat")))
+			{
+				ModuleColor = FVisualizationSystem::GetColorForModuleGroup(EStationModuleGroup::Habitation);
+			}
+			
+			// Draw the module as a wireframe box
+			FBox Box(Location - BoxExtent, Location + BoxExtent);
+			DrawWireBox(PDI, Box, ModuleColor, SDPG_World);
 		}
 		
-		// Draw the module as a wireframe box
-		FTransform ModuleTransform = Module.Transform;
-		FBox Box(Location - BoxExtent, Location + BoxExtent);
-		DrawWireBox(PDI, Box, ModuleColor, SDPG_World);
-		
-		// Draw orientation indicator using helper function
-		DrawModuleAxes(PDI, Location, ModuleTransform, 75.0f);
+		// Always draw orientation indicator
+		DrawModuleAxes(PDI, Module.Transform.GetLocation(), Module.Transform, 75.0f);
 	}
 }
 
@@ -246,4 +262,173 @@ void FStationViewportClient::DrawGrid(const FSceneView* View, FPrimitiveDrawInte
 	// Draw thicker center lines
 	PDI->DrawLine(FVector(-GridSize, 0, 0), FVector(GridSize, 0, 0), FLinearColor::Green, SDPG_World, 2.0f);
 	PDI->DrawLine(FVector(0, -GridSize, 0), FVector(0, GridSize, 0), FLinearColor::Red, SDPG_World, 2.0f);
+}
+
+void FStationViewportClient::UpdatePreviewComponents()
+{
+	if (!PreviewScene || !CurrentDesign)
+	{
+		ClearPreviewComponents();
+		return;
+	}
+
+	// Track which modules exist in the current design
+	TSet<FString> CurrentModuleIDs;
+	for (const FModulePlacement& Module : CurrentDesign->Modules)
+	{
+		CurrentModuleIDs.Add(Module.ModuleID);
+	}
+
+	// Remove components for modules that no longer exist
+	TArray<FString> ModulesToRemove;
+	for (const auto& Pair : PreviewComponents)
+	{
+		if (!CurrentModuleIDs.Contains(Pair.Key))
+		{
+			ModulesToRemove.Add(Pair.Key);
+		}
+	}
+
+	for (const FString& ModuleID : ModulesToRemove)
+	{
+		if (UStaticMeshComponent* Component = PreviewComponents[ModuleID])
+		{
+			PreviewScene->RemoveComponent(Component);
+		}
+		PreviewComponents.Remove(ModuleID);
+		ModuleBlueprintPaths.Remove(ModuleID);
+	}
+
+	// Add or update components for current modules
+	for (const FModulePlacement& Module : CurrentDesign->Modules)
+	{
+		UStaticMeshComponent* Component = PreviewComponents.FindRef(Module.ModuleID);
+		
+		if (!Component)
+		{
+			// Create new component for this module with proper Outer for garbage collection
+			// Using GetTransientPackage() allows components to be GC'd when no longer referenced
+			// Cleanup is ensured by ClearPreviewComponents() in destructor and SetStationDesign()
+			Component = NewObject<UStaticMeshComponent>(GetTransientPackage());
+			
+			if (Component)
+			{
+				// Try to load the blueprint and extract the static mesh
+				// Note: Synchronous loading is used for simplicity in this initial implementation
+				// For production use with many modules, consider async loading with callbacks
+				TArray<UMaterialInterface*> Materials;
+				UStaticMesh* Mesh = LoadMeshFromBlueprintPath(Module.ModuleBlueprintPath, Materials);
+				
+				if (Mesh)
+				{
+					Component->SetStaticMesh(Mesh);
+					
+					// Copy materials
+					for (int32 i = 0; i < Materials.Num(); ++i)
+					{
+						Component->SetMaterial(i, Materials[i]);
+					}
+				}
+				
+				// Only add the component to the preview scene if it has a valid static mesh
+				if (Component->GetStaticMesh())
+				{
+					PreviewScene->AddComponent(Component, Module.Transform);
+					PreviewComponents.Add(Module.ModuleID, Component);
+					ModuleBlueprintPaths.Add(Module.ModuleID, Module.ModuleBlueprintPath);
+				}
+			}
+		}
+		else
+		{
+			// Update existing component. If blueprint path changed, reload the mesh.
+			FSoftClassPath* CachedPath = ModuleBlueprintPaths.Find(Module.ModuleID);
+			bool bPathChanged = !CachedPath || *CachedPath != Module.ModuleBlueprintPath;
+			
+			if (bPathChanged)
+			{
+				// Blueprint path has changed, reload the mesh
+				TArray<UMaterialInterface*> Materials;
+				UStaticMesh* NewMesh = LoadMeshFromBlueprintPath(Module.ModuleBlueprintPath, Materials);
+				
+				if (NewMesh && Component->GetStaticMesh() != NewMesh)
+				{
+					Component->SetStaticMesh(NewMesh);
+					
+					// Update materials as well
+					for (int32 i = 0; i < Materials.Num(); ++i)
+					{
+						Component->SetMaterial(i, Materials[i]);
+					}
+				}
+				
+				// Update the cached path (always, even if mesh load failed)
+				ModuleBlueprintPaths.FindOrAdd(Module.ModuleID) = Module.ModuleBlueprintPath;
+			}
+			
+			// Always update the transform to match the module's placement.
+			Component->SetWorldTransform(Module.Transform);
+		}
+	}
+}
+
+void FStationViewportClient::ClearPreviewComponents()
+{
+	if (!PreviewScene)
+	{
+		return;
+	}
+
+	// Remove all components from the preview scene
+	for (const auto& Pair : PreviewComponents)
+	{
+		if (UStaticMeshComponent* Component = Pair.Value)
+		{
+			PreviewScene->RemoveComponent(Component);
+		}
+	}
+
+	PreviewComponents.Empty();
+	ModuleBlueprintPaths.Empty();
+}
+
+UStaticMesh* FStationViewportClient::LoadMeshFromBlueprintPath(const FSoftClassPath& BlueprintPath, TArray<UMaterialInterface*>& OutMaterials)
+{
+	OutMaterials.Empty();
+	
+	if (BlueprintPath.IsNull())
+	{
+		return nullptr;
+	}
+	
+	// Try to load the blueprint and extract the static mesh
+	UClass* BlueprintClass = BlueprintPath.TryLoadClass<UObject>();
+	if (!BlueprintClass)
+	{
+		return nullptr;
+	}
+	
+	// Get the Class Default Object (CDO) to inspect components
+	AActor* DefaultActor = Cast<AActor>(BlueprintClass->GetDefaultObject());
+	if (!DefaultActor)
+	{
+		return nullptr;
+	}
+	
+	// Try to find a static mesh component in the blueprint
+	TArray<UStaticMeshComponent*> MeshComponents;
+	DefaultActor->GetComponents<UStaticMeshComponent>(MeshComponents);
+	
+	if (MeshComponents.Num() > 0 && MeshComponents[0]->GetStaticMesh())
+	{
+		// Copy materials
+		for (int32 i = 0; i < MeshComponents[0]->GetNumMaterials(); ++i)
+		{
+			OutMaterials.Add(MeshComponents[0]->GetMaterial(i));
+		}
+		
+		return MeshComponents[0]->GetStaticMesh();
+	}
+	
+	return nullptr;
 }
