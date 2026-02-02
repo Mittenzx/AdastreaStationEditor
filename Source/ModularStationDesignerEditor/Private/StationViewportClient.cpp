@@ -341,8 +341,7 @@ void FStationViewportClient::UpdatePreviewComponents()
 		}
 		else
 		{
-			// Update existing component when the module already has a preview component.
-			// If the blueprint path (and thus the mesh) has changed, reload and update the mesh.
+			// Update existing component. If blueprint path changed, reload the mesh.
 			FSoftClassPath* CachedPath = ModuleBlueprintPaths.Find(Module.ModuleID);
 			
 			if (!CachedPath || *CachedPath != Module.ModuleBlueprintPath)
@@ -362,7 +361,7 @@ void FStationViewportClient::UpdatePreviewComponents()
 					}
 					
 					// Update the cached path
-					ModuleBlueprintPaths.Add(Module.ModuleID, Module.ModuleBlueprintPath);
+					ModuleBlueprintPaths[Module.ModuleID] = Module.ModuleBlueprintPath;
 				}
 			}
 			
